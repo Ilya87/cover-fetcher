@@ -1,6 +1,7 @@
 #ifndef COVERFETCHER_H
 #define COVERFETCHER_H
 
+#include "fetchdialog.h"
 #include <QItemSelectionModel>
 #include <QMenu>
 
@@ -11,6 +12,7 @@ class MIAMCORE_LIBRARY CoverFetcher : public QObject
 	Q_OBJECT
 private:
 	QItemSelectionModel *_selectionModel;
+	FetchDialog *_fetchDialog;
 
 public:
 	explicit CoverFetcher(QObject *parent);

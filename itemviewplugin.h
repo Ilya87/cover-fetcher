@@ -32,7 +32,7 @@ public:
 
 	inline virtual QString name() const { return "CoverFetcher"; }
 
-	inline virtual QString version() const { return "0.1"; }
+	inline virtual QString version() const { return "0.2"; }
 
 	/// From ItemViewPluginInterface
 	virtual QStringList classesToExtend();

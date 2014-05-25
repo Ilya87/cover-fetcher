@@ -5,9 +5,7 @@
 
 ItemViewPlugin::ItemViewPlugin()
 	: QObject()
-{
-
-}
+{}
 
 ItemViewPlugin::~ItemViewPlugin()
 {
@@ -16,6 +14,7 @@ ItemViewPlugin::~ItemViewPlugin()
 
 QWidget * ItemViewPlugin::configPage()
 {
+	/// TODO
 	return new QWidget();
 }
 

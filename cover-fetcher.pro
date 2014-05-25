@@ -1,4 +1,4 @@
-QT          += core gui widgets
+QT          += core gui multimedia network sql widgets
 
 TARGET      = $$qtLibraryTarget(cover-fetcher)
 TEMPLATE    = lib
@@ -18,15 +18,28 @@ CONFIG(release, debug|release) {
     LIBS += -Lrelease -lMiamCore
 }
 
+UI_DIR = $$PWD
+
 INSTALLS += target
 
 SOURCES += \
     itemviewplugin.cpp \
-    coverfetcher.cpp
+    coverfetcher.cpp \
+    fetchdialog.cpp
 
 HEADERS += \
     basicplugininterface.h \
     miamcore_global.h \
     itemviewplugininterface.h \
     itemviewplugin.h \
-    coverfetcher.h
+    coverfetcher.h \
+    librarysqlmodel.h \
+    filehelper.h \
+    mediaplayerplugininterface.h \
+    sqldatabase.h \
+    fetchdialog.h \
+    settings.h
+
+FORMS += \
+    fetchdialog.ui \
+    templateCover.ui
