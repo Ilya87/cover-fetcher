@@ -30,7 +30,6 @@ QStringList ItemViewPlugin::classesToExtend()
 
 QAction * ItemViewPlugin::action(const QString &view, QMenu *parent)
 {
-	//QAction *fetch = new QAction(tr("Fetch covers"), parent);
 	CoverFetcher *cf = _coverFetchers.value(view);
 	QAction *a = cf->action(parent);
 	return a;

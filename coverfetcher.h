@@ -4,6 +4,7 @@
 #include "fetchdialog.h"
 #include <QItemSelectionModel>
 #include <QMenu>
+#include <QNetworkAccessManager>
 
 #include "miamcore_global.h"
 
@@ -13,6 +14,7 @@ class MIAMCORE_LIBRARY CoverFetcher : public QObject
 private:
 	QItemSelectionModel *_selectionModel;
 	FetchDialog *_fetchDialog;
+	QNetworkAccessManager *_manager;
 
 public:
 	explicit CoverFetcher(QObject *parent);
