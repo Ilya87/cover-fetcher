@@ -14,8 +14,9 @@ ItemViewPlugin::~ItemViewPlugin()
 
 QWidget * ItemViewPlugin::configPage()
 {
-	/// TODO
-	return new QWidget();
+	QWidget *widget = new QWidget();
+	_ui.setupUi(widget);
+	return widget;
 }
 
 QStringList ItemViewPlugin::classesToExtend()

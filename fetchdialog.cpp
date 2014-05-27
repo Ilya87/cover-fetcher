@@ -11,7 +11,7 @@ FetchDialog::FetchDialog(QWidget *parent) :
 	connect(previewSizeSlider, &QSlider::valueChanged, this, &FetchDialog::updateCoverSize);
 
 	Settings *settings = Settings::getInstance();
-	settings->beginGroup("PluginCoverFetcher");
+	settings->beginGroup("CoverFetcher");
 	_coverValueSize = settings->value("coverValueSize", 64).toInt();
 
 	// Setting the value will trigger valueChanged connected upthere on purpose
@@ -20,7 +20,7 @@ FetchDialog::FetchDialog(QWidget *parent) :
 	settings->endGroup();
 
 	connect(this, &QDialog::finished, [=]() {
-		settings->beginGroup("PluginCoverFetcher");
+		settings->beginGroup("CoverFetcher");
 		settings->setValue("geometry", saveGeometry());
 		settings->endGroup();
 	});
@@ -48,7 +48,7 @@ void FetchDialog::updateCoverSize(int value)
 	}
 
 	Settings *settings = Settings::getInstance();
-	settings->beginGroup("PluginCoverFetcher");
+	settings->beginGroup("CoverFetcher");
 	settings->setValue("coverValueSize", _coverValueSize);
 	settings->setValue("previewSizeSliderValue", value);
 	settings->endGroup();

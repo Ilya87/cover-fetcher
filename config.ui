@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ConfigForm</class>
+ <widget class="QWidget" name="ConfigForm">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string notr="true"/>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Remote Cover Art locations</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QListWidget" name="listWidget">
+        <item>
+         <property name="text">
+          <string notr="true">MusicBrainz</string>
+         </property>
+         <property name="checkState">
+          <enum>Checked</enum>
+         </property>
+         <property name="flags">
+          <set>ItemIsSelectable|ItemIsDragEnabled</set>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string notr="true">Discogs</string>
+         </property>
+         <property name="checkState">
+          <enum>Unchecked</enum>
+         </property>
+         <property name="flags">
+          <set>ItemIsSelectable|ItemIsUserCheckable</set>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string notr="true">Amazon</string>
+         </property>
+         <property name="checkState">
+          <enum>Unchecked</enum>
+         </property>
+         <property name="flags">
+          <set>ItemIsSelectable|ItemIsUserCheckable</set>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string notr="true">Last.FM</string>
+         </property>
+         <property name="checkState">
+          <enum>Unchecked</enum>
+         </property>
+         <property name="flags">
+          <set>ItemIsSelectable|ItemIsDragEnabled</set>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="workInProgress">
+        <property name="font">
+         <font>
+          <italic>true</italic>
+         </font>
+        </property>
+        <property name="text">
+         <string>This plugin is under development, therefore only MusicBrainz Repository is implemented.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

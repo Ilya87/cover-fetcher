@@ -2,6 +2,7 @@
 #define ITEMVIEWPLUGIN_H
 
 #include "itemviewplugininterface.h"
+#include "ui_config.h"
 
 class CoverFetcher;
 
@@ -19,6 +20,8 @@ class ItemViewPlugin : public QObject, public ItemViewPluginInterface
 
 private:
 	QMap<QString, CoverFetcher*> _coverFetchers;
+
+	Ui::ConfigForm _ui;
 
 public:
 	explicit ItemViewPlugin();
