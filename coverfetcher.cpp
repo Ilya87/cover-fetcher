@@ -1,19 +1,26 @@
 #include "coverfetcher.h"
 #include "sqldatabase.h"
 
+#include <QDir>
 #include <QNetworkReply>
 #include <QNetworkRequest>
+#include <QScrollBar>
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QSqlRecord>
 #include <QStandardItemModel>
-#include <QTemporaryFile>
+#include <QStandardPaths>
 #include <QUrl>
 #include <QXmlStreamReader>
 
 #include <QtDebug>
 
 #include "ui_templateCover.h"
+
+#include <string>
+#include <iostream>
+
+using namespace std;
 
 CoverFetcher::CoverFetcher(QObject *parent) :
 	QObject(parent), _selectionModel(NULL)
@@ -22,54 +29,41 @@ CoverFetcher::CoverFetcher(QObject *parent) :
 
 	_manager = new QNetworkAccessManager(this);
 	connect(_manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply *reply) {
-		QXmlStreamReader xml(reply->readAll());
-
-		QMap<QString, int> map;
-		while(!xml.atEnd() && !xml.hasError()) {
-
-			QXmlStreamReader::TokenType token = xml.readNext();
-			if (token == QXmlStreamReader::StartDocument) {
-				continue;
-			}
-
-			// Parse start elements
-			if (token == QXmlStreamReader::StartElement) {
-				if (xml.name() == "metadata") {
-					continue;
-				}
-				if (xml.name() == "artist") {
-					if (xml.attributes().hasAttribute("id")) {
-						QStringRef sr = xml.attributes().value("id");
-						qDebug() << sr;
-						if (map.contains(sr.toString())) {
-							int i = map.value(sr.toString());
-							map.insert(sr.toString(), ++i);
-						} else {
-							map.insert(sr.toString(), 1);
-						}
+		QByteArray ba = reply->readAll();
+		// Dispatch request
+		switch (_currentCall) {
+		case Fetch_Artists:
+			this->fetchArtists(ba);
+			break;
+		case Fetch_Releases:
+			break;
+		case Download_Cover: {
+			// In case we don't get the picture at the first attempt
+			QVariant redirectionTarget = reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
+			if (redirectionTarget.isNull()) {
+				// The current covert has been downloaded, now we can populate the lists
+				foreach (QGroupBox *gb, _fetchDialog->findChildren<QGroupBox*>()) {
+					if (gb->title() == _releasesGroup.value(reply->url())) {
+						QListWidget *list = gb->findChild<QListWidget*>("remoteCovers");
+						QListWidgetItem *item = new QListWidgetItem(list);
+						item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+						item->setCheckState(Qt::Checked);
+						QPixmap pixmap;
+						pixmap.loadFromData(ba);
+						item->setIcon(QIcon(pixmap));
+						break;
 					}
 				}
+			} else {
+				QUrl newUrl = reply->url().resolved(redirectionTarget.toUrl());
+				QString release = _releasesGroup.value(reply->url());
+				_releasesGroup.remove(reply->url());
+				_releasesGroup.insert(newUrl, release);
+				_manager->get(QNetworkRequest(newUrl));
 			}
+			break;
 		}
-		int max = -1;
-		QString mbid;
-		QMapIterator<QString, int> it(map);
-		while (it.hasNext()) {
-			it.next();
-			if (max < it.value()) {
-				max = it.value();
-				mbid = it.key();
-			}
 		}
-		qDebug() << "highest mbid" << mbid;
-		// reparse again the xml and ignore other mbid
-		// find <release-group id="album-mbid"> matching the album
-		// call cover art api with: album-mbid -> http://coverartarchive.org/release-group/{album-mbid}/front-{250|500}.jpg
-		// behold: redirections
-		// get the picture
-		// display in the list (1, 2, ?)
-		// attach to tag ?
-		// copy to folder ?
 	});
 }
 
@@ -89,13 +83,12 @@ void CoverFetcher::fetch()
 		}
 		delete child;
 	}
+	_fetchDialog->scrollArea->verticalScrollBar()->setValue(0);
+	_releasesGroup.clear();
 
-	SqlDatabase db;
-	db.open();
 	QStringList artists;
 	foreach (QModelIndex index, _selectionModel->selectedIndexes()) {
 		if (index.column() == 0) {
-			//qDebug() << _selectionModel->model() << index.column();
 			QVariant v = index.data(Qt::UserRole + 1);
 			if (v.isValid()) {
 				/// FIXME: Magic numbers from LibraryTreeView class
@@ -119,14 +112,17 @@ void CoverFetcher::fetch()
 	//				title varchar(255), trackNumber INTEGER, discNumber INTEGER, year INTEGER,
 	//				absPath varchar(255) PRIMARY KEY ASC, path varchar(255),
 	//				coverAbsPath varchar(255), internalCover INTEGER DEFAULT 0, externalCover INTEGER DEFAULT 0)
+	SqlDatabase db;
+	db.open();
 	foreach (QString artist, artists) {
 
 		QLabel *labelArtist = new QLabel("Artist: " + artist);
 		_fetchDialog->scrollAreaWidgetContents->layout()->addWidget(labelArtist);
 
 		qDebug() << "fetching covers for" << artist;
-		QNetworkRequest request(QUrl("http://musicbrainz.org/ws/2/release-group/?query=artist:%22" + artist + "%22"));
+		QNetworkRequest request(QUrl("http://musicbrainz.org/ws/2/release-group/?query=artist:%22" + artist + "%22;limit=100"));
 		request.setHeader(QNetworkRequest::UserAgentHeader, "MiamPlayer/0.6.3 ( https://github.com/MBach/Miam-Player )" );
+		_currentCall = Fetch_Artists;
 		_manager->get(request);
 
 		QSqlQuery q(db);
@@ -175,4 +171,124 @@ void CoverFetcher::fetch()
 
 	_fetchDialog->show();
 	_fetchDialog->activateWindow();
+}
+
+void CoverFetcher::fetchArtists(const QByteArray &ba)
+{
+	/*QXmlStreamReader xml(ba);
+	QMap<QString, int> map;
+	while(!xml.atEnd() && !xml.hasError()) {
+
+		QXmlStreamReader::TokenType token = xml.readNext();
+		// Parse start elements
+		if (token == QXmlStreamReader::StartElement) {
+			if (xml.name() == "artist") {
+				if (xml.attributes().hasAttribute("id")) {
+					QStringRef sr = xml.attributes().value("id");
+					qDebug() << sr;
+					if (map.contains(sr.toString())) {
+						int i = map.value(sr.toString());
+						map.insert(sr.toString(), ++i);
+					} else {
+						map.insert(sr.toString(), 1);
+					}
+				}
+			}
+		}
+	}
+	int max = -1;
+	QString mbid;
+	QMapIterator<QString, int> it(map);
+	qDebug() << "highest mbid" << mbid;
+	while (it.hasNext()) {
+		it.next();
+		if (max < it.value()) {
+			max = it.value();
+			mbid = it.key();
+		}
+	}*/
+	this->fetchReleases(ba);
+}
+
+void CoverFetcher::fetchReleases(const QByteArray &ba)
+{
+	QXmlStreamReader xml(ba);
+
+	// Album Text -> Album ID
+	QMap<QString, QString> map;
+	while(!xml.atEnd() && !xml.hasError()) {
+
+		QXmlStreamReader::TokenType token = xml.readNext();
+
+		// Parse start elements
+		if (token == QXmlStreamReader::StartElement) {
+			if (xml.name() == "release-group") {
+				if (xml.attributes().hasAttribute("id")) {
+					QStringRef sr = xml.attributes().value("id");
+					if (xml.readNextStartElement() && xml.name() == "title") {
+						map.insert(xml.readElementText().toLower(), sr.toString());
+					}
+				}
+			}
+		}
+	}
+
+	QMapIterator<QString, QString> it(map);
+	/// Complexity: should be improved!
+	while (it.hasNext()) {
+		it.next();
+		qDebug() << "while:" << it.key() << it.value();
+		foreach (QGroupBox *gb, _fetchDialog->findChildren<QGroupBox*>()) {
+			qDebug() << "foreach:" << gb->title();
+			if (uiLevenshteinDistance(gb->title().toLower().toStdString(), it.key().toStdString()) < 2) {
+				qDebug() << "uiLevenshteinDistance: get the covert art for " << it.value();
+				QUrl url("http://coverartarchive.org/release-group/" + it.value() + "/front");
+				QNetworkRequest request(url);
+				request.setHeader(QNetworkRequest::UserAgentHeader, "MiamPlayer/0.6.3 ( https://github.com/MBach/Miam-Player )" );
+				_currentCall = Download_Cover;
+				_releasesGroup.insert(url, gb->title());
+				_manager->get(request);
+				break;
+			}
+		}
+	}
+}
+
+// Compute Levenshtein Distance
+// Martin Ettl, 2012-10-05
+
+size_t CoverFetcher::uiLevenshteinDistance(const std::string &s1, const std::string &s2)
+{
+	const size_t m(s1.size());
+	const size_t n(s2.size());
+
+	if (m==0) return n;
+	if (n==0) return m;
+
+	size_t *costs = new size_t[n + 1];
+
+	for (size_t k = 0; k <= n; k++) costs[k] = k;
+
+	size_t i = 0;
+	for (string::const_iterator it1 = s1.begin(); it1 != s1.end(); ++it1, ++i) {
+		costs[0] = i+1;
+		size_t corner = i;
+
+		size_t j = 0;
+		for (string::const_iterator it2 = s2.begin(); it2 != s2.end(); ++it2, ++j) {
+			size_t upper = costs[j+1];
+			if (*it1 == *it2) {
+				costs[j+1] = corner;
+			} else {
+				size_t t(upper < corner ? upper : corner);
+				costs[j+1] = (costs[j] < t ? costs[j] : t) + 1;
+			}
+			corner = upper;
+		}
+	}
+
+	size_t result = costs[n];
+	delete [] costs;
+
+	return result;
 }

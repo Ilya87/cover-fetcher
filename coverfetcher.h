@@ -5,6 +5,7 @@
 #include <QItemSelectionModel>
 #include <QMenu>
 #include <QNetworkAccessManager>
+#include <QUrl>
 
 #include "miamcore_global.h"
 
@@ -15,6 +16,16 @@ private:
 	QItemSelectionModel *_selectionModel;
 	FetchDialog *_fetchDialog;
 	QNetworkAccessManager *_manager;
+	QMap<QUrl, QString> _releasesGroup;
+
+	Q_ENUMS(Fetch_Operations)
+
+public:
+	enum Fetch_Operations { Fetch_Artists = 0,
+							Fetch_Releases = 1,
+							Download_Cover = 2};
+private:
+	Fetch_Operations _currentCall;
 
 public:
 	explicit CoverFetcher(QObject *parent);
@@ -23,8 +34,15 @@ public:
 
 	QAction * action(QMenu *parentMenu);
 
+private:
+	static size_t uiLevenshteinDistance(const std::string &s1, const std::string &s2);
+
 private slots:
 	void fetch();
+
+	void fetchArtists(const QByteArray &ba);
+
+	void fetchReleases(const QByteArray &ba);
 };
 
 #endif // COVERFETCHER_H

@@ -49,10 +49,15 @@ public:
         sizePolicy.setHeightForWidth(currentCover->sizePolicy().hasHeightForWidth());
         currentCover->setSizePolicy(sizePolicy);
         currentCover->setMinimumSize(QSize(32, 32));
+        currentCover->setMaximumSize(QSize(512, 512));
+        currentCover->setFocusPolicy(Qt::ClickFocus);
+        currentCover->setContextMenuPolicy(Qt::NoContextMenu);
         currentCover->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         currentCover->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        currentCover->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        currentCover->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
+        currentCover->setEditTriggers(QAbstractItemView::SelectedClicked);
         currentCover->setProperty("showDropIndicator", QVariant(false));
+        currentCover->setDragDropMode(QAbstractItemView::NoDragDrop);
         currentCover->setViewMode(QListView::IconMode);
 
         horizontalLayout_2->addWidget(currentCover);
@@ -65,6 +70,8 @@ public:
         sizePolicy1.setHeightForWidth(remoteCovers->sizePolicy().hasHeightForWidth());
         remoteCovers->setSizePolicy(sizePolicy1);
         remoteCovers->setMinimumSize(QSize(32, 32));
+        remoteCovers->setMaximumSize(QSize(512, 512));
+        remoteCovers->setFocusPolicy(Qt::ClickFocus);
         remoteCovers->setEditTriggers(QAbstractItemView::NoEditTriggers);
         remoteCovers->setProperty("showDropIndicator", QVariant(false));
         remoteCovers->setMovement(QListView::Snap);
