@@ -5,6 +5,9 @@
 
 #include "ui_fetchdialog.h"
 
+/**
+ * \brief The FetchDialog class
+ */
 class FetchDialog : public QDialog, public Ui::FetchDialog
 {
 	Q_OBJECT
@@ -16,7 +19,12 @@ public:
 
 	inline int coverValueSize() const { return _coverValueSize; }
 
+protected:
+	void closeEvent(QCloseEvent *e);
+
 private slots:
+	void applyChanges();
+
 	void updateCoverSize(int value);
 };
 

@@ -1,5 +1,6 @@
 #include "itemviewplugin.h"
 #include "coverfetcher.h"
+#include "settings.h"
 
 #include <QtDebug>
 
@@ -16,6 +17,16 @@ QWidget * ItemViewPlugin::configPage()
 {
 	QWidget *widget = new QWidget();
 	_ui.setupUi(widget);
+	Settings *settings = Settings::getInstance();
+	settings->beginGroup("CoverFetcher");
+	_ui.radioButtonIntegrateCover->setChecked(settings->value("integrateCoverToFiles", true).toBool());
+	settings->endGroup();
+
+	connect(_ui.radioButtonIntegrateCover, &QRadioButton::toggled, this, [=](bool b) {
+		settings->beginGroup("CoverFetcher");
+		settings->setValue("integrateCoverToFiles", b);
+		settings->endGroup();
+	});
 	return widget;
 }
 

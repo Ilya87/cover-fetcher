@@ -25,7 +25,8 @@ INSTALLS += target
 SOURCES += \
     itemviewplugin.cpp \
     coverfetcher.cpp \
-    fetchdialog.cpp
+    fetchdialog.cpp \
+    coverwidgetitemdelegate.cpp
 
 HEADERS += \
     basicplugininterface.h \
@@ -38,8 +39,10 @@ HEADERS += \
     mediaplayerplugininterface.h \
     sqldatabase.h \
     fetchdialog.h \
-    settings.h
+    settings.h \
+    coverwidgetitemdelegate.h
 
 FORMS += \
     fetchdialog.ui \
-    templateCover.ui
+    templateCover.ui \
+    config.ui

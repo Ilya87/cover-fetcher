@@ -14,9 +14,11 @@
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QGroupBox>
+#include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QListWidget>
+#include <QtWidgets/QRadioButton>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
 
@@ -26,7 +28,13 @@ class Ui_ConfigForm
 {
 public:
     QVBoxLayout *verticalLayout;
-    QGroupBox *groupBox;
+    QGroupBox *groupBoxIntegrate;
+    QVBoxLayout *verticalLayout_3;
+    QLabel *labelIntegrateCover;
+    QHBoxLayout *horizontalLayout;
+    QRadioButton *radioButtonIntegrateCover;
+    QRadioButton *radioButtonDontIntegrate;
+    QGroupBox *groupBoxRemoteLocations;
     QVBoxLayout *verticalLayout_2;
     QListWidget *listWidget;
     QLabel *workInProgress;
@@ -39,11 +47,43 @@ public:
         ConfigForm->setWindowTitle(QStringLiteral(""));
         verticalLayout = new QVBoxLayout(ConfigForm);
         verticalLayout->setObjectName(QStringLiteral("verticalLayout"));
-        groupBox = new QGroupBox(ConfigForm);
-        groupBox->setObjectName(QStringLiteral("groupBox"));
-        verticalLayout_2 = new QVBoxLayout(groupBox);
+        groupBoxIntegrate = new QGroupBox(ConfigForm);
+        groupBoxIntegrate->setObjectName(QStringLiteral("groupBoxIntegrate"));
+        verticalLayout_3 = new QVBoxLayout(groupBoxIntegrate);
+        verticalLayout_3->setObjectName(QStringLiteral("verticalLayout_3"));
+        labelIntegrateCover = new QLabel(groupBoxIntegrate);
+        labelIntegrateCover->setObjectName(QStringLiteral("labelIntegrateCover"));
+        QFont font;
+        font.setItalic(true);
+        labelIntegrateCover->setFont(font);
+        labelIntegrateCover->setWordWrap(true);
+
+        verticalLayout_3->addWidget(labelIntegrateCover);
+
+        horizontalLayout = new QHBoxLayout();
+        horizontalLayout->setObjectName(QStringLiteral("horizontalLayout"));
+        radioButtonIntegrateCover = new QRadioButton(groupBoxIntegrate);
+        radioButtonIntegrateCover->setObjectName(QStringLiteral("radioButtonIntegrateCover"));
+        radioButtonIntegrateCover->setChecked(true);
+
+        horizontalLayout->addWidget(radioButtonIntegrateCover);
+
+        radioButtonDontIntegrate = new QRadioButton(groupBoxIntegrate);
+        radioButtonDontIntegrate->setObjectName(QStringLiteral("radioButtonDontIntegrate"));
+
+        horizontalLayout->addWidget(radioButtonDontIntegrate);
+
+
+        verticalLayout_3->addLayout(horizontalLayout);
+
+
+        verticalLayout->addWidget(groupBoxIntegrate);
+
+        groupBoxRemoteLocations = new QGroupBox(ConfigForm);
+        groupBoxRemoteLocations->setObjectName(QStringLiteral("groupBoxRemoteLocations"));
+        verticalLayout_2 = new QVBoxLayout(groupBoxRemoteLocations);
         verticalLayout_2->setObjectName(QStringLiteral("verticalLayout_2"));
-        listWidget = new QListWidget(groupBox);
+        listWidget = new QListWidget(groupBoxRemoteLocations);
         QListWidgetItem *__qlistwidgetitem = new QListWidgetItem(listWidget);
         __qlistwidgetitem->setText(QStringLiteral("MusicBrainz"));
         __qlistwidgetitem->setCheckState(Qt::Checked);
@@ -64,17 +104,15 @@ public:
 
         verticalLayout_2->addWidget(listWidget);
 
-        workInProgress = new QLabel(groupBox);
+        workInProgress = new QLabel(groupBoxRemoteLocations);
         workInProgress->setObjectName(QStringLiteral("workInProgress"));
-        QFont font;
-        font.setItalic(true);
         workInProgress->setFont(font);
         workInProgress->setWordWrap(true);
 
         verticalLayout_2->addWidget(workInProgress);
 
 
-        verticalLayout->addWidget(groupBox);
+        verticalLayout->addWidget(groupBoxRemoteLocations);
 
 
         retranslateUi(ConfigForm);
@@ -84,7 +122,11 @@ public:
 
     void retranslateUi(QWidget *ConfigForm)
     {
-        groupBox->setTitle(QApplication::translate("ConfigForm", "Remote Cover Art locations", 0));
+        groupBoxIntegrate->setTitle(QApplication::translate("ConfigForm", "About downloaded covers", 0));
+        labelIntegrateCover->setText(QApplication::translate("ConfigForm", "When it is possible, should I try to incorporate the cover inside the file?", 0));
+        radioButtonIntegrateCover->setText(QApplication::translate("ConfigForm", "Yes", 0));
+        radioButtonDontIntegrate->setText(QApplication::translate("ConfigForm", "No", 0));
+        groupBoxRemoteLocations->setTitle(QApplication::translate("ConfigForm", "Remote Cover Art locations", 0));
 
         const bool __sortingEnabled = listWidget->isSortingEnabled();
         listWidget->setSortingEnabled(false);

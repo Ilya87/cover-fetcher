@@ -9,7 +9,7 @@ class CoverFetcher;
 /**
  * \brief       Fetch covers using MusicBrainz
  * \author      Matthieu Bachelier
- * \version     0.1
+ * \version     0.4
  * \copyright   GNU General Public License v3
  */
 class ItemViewPlugin : public QObject, public ItemViewPluginInterface
@@ -35,7 +35,7 @@ public:
 
 	inline virtual QString name() const { return "CoverFetcher"; }
 
-	inline virtual QString version() const { return "0.3"; }
+	inline virtual QString version() const { return "0.4"; }
 
 	/// From ItemViewPluginInterface
 	virtual QStringList classesToExtend();

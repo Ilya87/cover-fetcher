@@ -4,7 +4,6 @@
 #include <QDir>
 #include <QNetworkReply>
 #include <QNetworkRequest>
-#include <QScrollBar>
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QSqlRecord>
@@ -16,6 +15,7 @@
 #include <QtDebug>
 
 #include "ui_templateCover.h"
+#include "coverwidgetitemdelegate.h"
 
 #include <string>
 #include <iostream>
@@ -28,43 +28,7 @@ CoverFetcher::CoverFetcher(QObject *parent) :
 	_fetchDialog = new FetchDialog;
 
 	_manager = new QNetworkAccessManager(this);
-	connect(_manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply *reply) {
-		QByteArray ba = reply->readAll();
-		// Dispatch request
-		switch (_currentCall) {
-		case Fetch_Artists:
-			this->fetchArtists(ba);
-			break;
-		case Fetch_Releases:
-			break;
-		case Download_Cover: {
-			// In case we don't get the picture at the first attempt
-			QVariant redirectionTarget = reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
-			if (redirectionTarget.isNull()) {
-				// The current covert has been downloaded, now we can populate the lists
-				foreach (QGroupBox *gb, _fetchDialog->findChildren<QGroupBox*>()) {
-					if (gb->title() == _releasesGroup.value(reply->url())) {
-						QListWidget *list = gb->findChild<QListWidget*>("remoteCovers");
-						QListWidgetItem *item = new QListWidgetItem(list);
-						item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-						item->setCheckState(Qt::Checked);
-						QPixmap pixmap;
-						pixmap.loadFromData(ba);
-						item->setIcon(QIcon(pixmap));
-						break;
-					}
-				}
-			} else {
-				QUrl newUrl = reply->url().resolved(redirectionTarget.toUrl());
-				QString release = _releasesGroup.value(reply->url());
-				_releasesGroup.remove(reply->url());
-				_releasesGroup.insert(newUrl, release);
-				_manager->get(QNetworkRequest(newUrl));
-			}
-			break;
-		}
-		}
-	});
+	connect(_manager, &QNetworkAccessManager::finished, this, &CoverFetcher::dispatchReply);
 }
 
 QAction * CoverFetcher::action(QMenu *parentMenu)
@@ -74,16 +38,47 @@ QAction * CoverFetcher::action(QMenu *parentMenu)
 	return action;
 }
 
+void CoverFetcher::dispatchReply(QNetworkReply *reply)
+{
+	QByteArray ba = reply->readAll();
+	// Dispatch request
+	switch (_currentCall) {
+	case Fetch_Artists:
+		this->fetchArtists(ba);
+		break;
+	case Fetch_Releases:
+		break;
+	case Download_Cover: {
+		// In case we don't get the picture at the first attempt
+		QVariant redirectionTarget = reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
+		if (redirectionTarget.isNull()) {
+			// The current covert has been downloaded, now we can populate the lists
+			QPixmap pixmap;
+			foreach (QGroupBox *gb, _fetchDialog->findChildren<QGroupBox*>()) {
+				// It's possible to have a valid release but without cover yet :(
+				if (gb->title() == _releasesGroup.value(reply->url()) && pixmap.loadFromData(ba)) {
+					QListWidget *list = gb->findChild<QListWidget*>("remoteCovers");
+					QListWidgetItem *item = new QListWidgetItem(list);
+					item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+					item->setCheckState(Qt::Unchecked);
+					item->setIcon(QIcon(pixmap));
+					break;
+				}
+			}
+		} else {
+			QUrl newUrl = reply->url().resolved(redirectionTarget.toUrl());
+			QString release = _releasesGroup.value(reply->url());
+			_releasesGroup.remove(reply->url());
+			_releasesGroup.insert(newUrl, release);
+			_manager->get(QNetworkRequest(newUrl));
+		}
+		break;
+	}
+	}
+}
+
 void CoverFetcher::fetch()
 {
-	QLayoutItem *child;
-	while ((child = _fetchDialog->scrollAreaWidgetContents->layout()->takeAt(0)) != 0) {
-		if (child->widget()) {
-			delete child->widget();
-		}
-		delete child;
-	}
-	_fetchDialog->scrollArea->verticalScrollBar()->setValue(0);
 	_releasesGroup.clear();
 
 	QStringList artists;
@@ -133,7 +128,7 @@ void CoverFetcher::fetch()
 			while (q.next()) {
 				qDebug() << "q" << q.record().value(0);
 				Ui_TemplateCovers templateCover;
-				QWidget *covers = new QWidget;
+				QWidget *covers = new QWidget(_fetchDialog);
 				templateCover.setupUi(covers);
 				// Fill the groupBox title with an Album from this Artist
 				QString album = q.record().value(0).toString();
@@ -146,9 +141,12 @@ void CoverFetcher::fetch()
 				templateCover.currentCover->setIconSize(s);
 				templateCover.currentCover->setMinimumSize(s2);
 				templateCover.currentCover->setMaximumSize(s2);
+				templateCover.currentCover->setItemDelegate(new CoverWidgetItemDelegate(templateCover.currentCover));
+
 				templateCover.remoteCovers->setDragDropMode(QListWidget::NoDragDrop);
 				templateCover.remoteCovers->setIconSize(s);
 				templateCover.remoteCovers->setMaximumHeight(s2.height());
+				templateCover.remoteCovers->setItemDelegate(new CoverWidgetItemDelegate(templateCover.remoteCovers));
 
 				QListWidgetItem *currentCover = new QListWidgetItem();
 
@@ -240,14 +238,17 @@ void CoverFetcher::fetchReleases(const QByteArray &ba)
 		qDebug() << "while:" << it.key() << it.value();
 		foreach (QGroupBox *gb, _fetchDialog->findChildren<QGroupBox*>()) {
 			qDebug() << "foreach:" << gb->title();
-			if (uiLevenshteinDistance(gb->title().toLower().toStdString(), it.key().toStdString()) < 2) {
-				qDebug() << "uiLevenshteinDistance: get the covert art for " << it.value();
+			if (it.key().contains(gb->title().toLower()) || gb->title().toLower().contains(it.key()) ||
+					uiLevenshteinDistance(gb->title().toLower().toStdString(), it.key().toStdString()) < 2) {
+				qDebug() << "uiLevenshteinDistance: get the covert art for " << gb->title() << it.key() << it.value();
+				/// FIXME: find a way to get the 500px thumbnail and to automatically download the large one after
 				QUrl url("http://coverartarchive.org/release-group/" + it.value() + "/front");
 				QNetworkRequest request(url);
 				request.setHeader(QNetworkRequest::UserAgentHeader, "MiamPlayer/0.6.3 ( https://github.com/MBach/Miam-Player )" );
 				_currentCall = Download_Cover;
 				_releasesGroup.insert(url, gb->title());
 				_manager->get(request);
+				//it.remove();
 				break;
 			}
 		}

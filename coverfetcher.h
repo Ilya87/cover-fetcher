@@ -9,6 +9,11 @@
 
 #include "miamcore_global.h"
 
+/**
+ * \brief       The CoverFetcher class
+ * \author      Matthieu Bachelier
+ * \copyright   GNU General Public License v3
+ */
 class MIAMCORE_LIBRARY CoverFetcher : public QObject
 {
 	Q_OBJECT
@@ -38,6 +43,8 @@ private:
 	static size_t uiLevenshteinDistance(const std::string &s1, const std::string &s2);
 
 private slots:
+	void dispatchReply(QNetworkReply *reply);
+
 	void fetch();
 
 	void fetchArtists(const QByteArray &ba);
