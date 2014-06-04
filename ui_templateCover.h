@@ -26,7 +26,7 @@ class Ui_TemplateCovers
 {
 public:
     QHBoxLayout *horizontalLayout;
-    QGroupBox *existingCoverGroupBox;
+    QGroupBox *albumCoverGroupBox;
     QHBoxLayout *horizontalLayout_2;
     QSpacerItem *leftSpacer;
     QListWidget *currentCover;
@@ -37,7 +37,7 @@ public:
     {
         if (TemplateCovers->objectName().isEmpty())
             TemplateCovers->setObjectName(QStringLiteral("TemplateCovers"));
-        TemplateCovers->resize(144, 88);
+        TemplateCovers->resize(154, 100);
         QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
         sizePolicy.setHorizontalStretch(0);
         sizePolicy.setVerticalStretch(0);
@@ -47,17 +47,17 @@ public:
         horizontalLayout->setSpacing(0);
         horizontalLayout->setObjectName(QStringLiteral("horizontalLayout"));
         horizontalLayout->setContentsMargins(0, -1, 0, -1);
-        existingCoverGroupBox = new QGroupBox(TemplateCovers);
-        existingCoverGroupBox->setObjectName(QStringLiteral("existingCoverGroupBox"));
-        existingCoverGroupBox->setTitle(QStringLiteral("Album"));
-        existingCoverGroupBox->setFlat(true);
-        horizontalLayout_2 = new QHBoxLayout(existingCoverGroupBox);
+        albumCoverGroupBox = new QGroupBox(TemplateCovers);
+        albumCoverGroupBox->setObjectName(QStringLiteral("albumCoverGroupBox"));
+        albumCoverGroupBox->setTitle(QStringLiteral("Album"));
+        albumCoverGroupBox->setFlat(true);
+        horizontalLayout_2 = new QHBoxLayout(albumCoverGroupBox);
         horizontalLayout_2->setObjectName(QStringLiteral("horizontalLayout_2"));
         leftSpacer = new QSpacerItem(20, 20, QSizePolicy::Minimum, QSizePolicy::Minimum);
 
         horizontalLayout_2->addItem(leftSpacer);
 
-        currentCover = new QListWidget(existingCoverGroupBox);
+        currentCover = new QListWidget(albumCoverGroupBox);
         currentCover->setObjectName(QStringLiteral("currentCover"));
         QSizePolicy sizePolicy1(QSizePolicy::Expanding, QSizePolicy::Expanding);
         sizePolicy1.setHorizontalStretch(0);
@@ -73,13 +73,13 @@ public:
         currentCover->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
         currentCover->setEditTriggers(QAbstractItemView::NoEditTriggers);
         currentCover->setProperty("showDropIndicator", QVariant(false));
-        currentCover->setDragDropMode(QAbstractItemView::DropOnly);
+        currentCover->setDragDropMode(QAbstractItemView::NoDragDrop);
         currentCover->setMovement(QListView::Static);
         currentCover->setViewMode(QListView::IconMode);
 
         horizontalLayout_2->addWidget(currentCover);
 
-        remoteCovers = new QListWidget(existingCoverGroupBox);
+        remoteCovers = new QListWidget(albumCoverGroupBox);
         remoteCovers->setObjectName(QStringLiteral("remoteCovers"));
         sizePolicy1.setHeightForWidth(remoteCovers->sizePolicy().hasHeightForWidth());
         remoteCovers->setSizePolicy(sizePolicy1);
@@ -102,7 +102,7 @@ public:
         horizontalLayout_2->addItem(rightSpacer);
 
 
-        horizontalLayout->addWidget(existingCoverGroupBox);
+        horizontalLayout->addWidget(albumCoverGroupBox);
 
 
         retranslateUi(TemplateCovers);

@@ -26,6 +26,8 @@ CoverFetcher::CoverFetcher(QObject *parent) :
 	QObject(parent), _selectionModel(NULL)
 {
 	_fetchDialog = new FetchDialog;
+	// Foward signal
+	connect(_fetchDialog, &FetchDialog::refreshView, this, &CoverFetcher::refreshView);
 
 	_manager = new QNetworkAccessManager(this);
 	connect(_manager, &QNetworkAccessManager::finished, this, &CoverFetcher::dispatchReply);
@@ -41,20 +43,25 @@ QAction * CoverFetcher::action(QMenu *parentMenu)
 void CoverFetcher::dispatchReply(QNetworkReply *reply)
 {
 	QByteArray ba = reply->readAll();
+	QString path = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
 	// Dispatch request
 	switch (_currentCall) {
 	case Fetch_Artists:
 		this->fetchArtists(ba);
 		break;
 	case Fetch_Releases:
+		/// XXX
 		break;
 	case Download_Cover: {
-		// In case we don't get the picture at the first attempt
+		// In case we don't get the picture at the first attempt, try again
 		QVariant redirectionTarget = reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
 		if (redirectionTarget.isNull()) {
-			// The current covert has been downloaded, now we can populate the lists
+
+			// The current covert has been downloaded to a temporary location, the lists can be populated
+			QString tmpCoverPath = QDir::toNativeSeparators(path + "/" + reply->url().fileName());
 			QPixmap pixmap;
 			foreach (QGroupBox *gb, _fetchDialog->findChildren<QGroupBox*>()) {
+
 				// It's possible to have a valid release but without cover yet :(
 				if (gb->title() == _releasesGroup.value(reply->url()) && pixmap.loadFromData(ba)) {
 					QListWidget *list = gb->findChild<QListWidget*>("remoteCovers");
@@ -62,6 +69,10 @@ void CoverFetcher::dispatchReply(QNetworkReply *reply)
 					item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
 					item->setCheckState(Qt::Unchecked);
 					item->setIcon(QIcon(pixmap));
+					if (pixmap.save(tmpCoverPath)) {
+						// Kind of ugly way to pass data from one class to another, but it does the job (at least an enum was created)
+						item->setData(FetchDialog::LW_TmpCoverPath, tmpCoverPath);
+					}
 					break;
 				}
 			}
@@ -77,6 +88,9 @@ void CoverFetcher::dispatchReply(QNetworkReply *reply)
 	}
 }
 
+#include "filehelper.h"
+#include "cover.h"
+
 void CoverFetcher::fetch()
 {
 	_releasesGroup.clear();
@@ -87,6 +101,8 @@ void CoverFetcher::fetch()
 			QVariant v = index.data(Qt::UserRole + 1);
 			if (v.isValid()) {
 				/// FIXME: Magic numbers from LibraryTreeView class
+				/// Problem: LibraryTreeView is in MiamPlayer, not MiamCore, so it's not supposed to be accessible
+				/// So, it's not relevant to create an enumeration in MiamCore just for a specific view
 				switch (v.toInt()) {
 				case 0: {
 					qDebug() << "fetch covers for this artist" << index.data();
@@ -106,7 +122,7 @@ void CoverFetcher::fetch()
 	// TABLE tracks (artist varchar(255), artistAlbum varchar(255), album varchar(255),
 	//				title varchar(255), trackNumber INTEGER, discNumber INTEGER, year INTEGER,
 	//				absPath varchar(255) PRIMARY KEY ASC, path varchar(255),
-	//				coverAbsPath varchar(255), internalCover INTEGER DEFAULT 0, externalCover INTEGER DEFAULT 0)
+	//				coverAbsPath varchar(255), internalCover INTEGER DEFAULT 0)
 	SqlDatabase db;
 	db.open();
 	foreach (QString artist, artists) {
@@ -115,13 +131,14 @@ void CoverFetcher::fetch()
 		_fetchDialog->scrollAreaWidgetContents->layout()->addWidget(labelArtist);
 
 		qDebug() << "fetching covers for" << artist;
+		/// XXX Behold: encode Url in a safe way
 		QNetworkRequest request(QUrl("http://musicbrainz.org/ws/2/release-group/?query=artist:%22" + artist + "%22;limit=100"));
 		request.setHeader(QNetworkRequest::UserAgentHeader, "MiamPlayer/0.6.3 ( https://github.com/MBach/Miam-Player )" );
 		_currentCall = Fetch_Artists;
 		_manager->get(request);
 
 		QSqlQuery q(db);
-		q.prepare("SELECT DISTINCT album, coverAbsPath FROM tracks WHERE artist = ?");
+		q.prepare("SELECT DISTINCT album, coverAbsPath, internalCover FROM tracks WHERE artist = ?");
 		q.addBindValue(artist);
 
 		if (q.exec()) {
@@ -132,7 +149,7 @@ void CoverFetcher::fetch()
 				templateCover.setupUi(covers);
 				// Fill the groupBox title with an Album from this Artist
 				QString album = q.record().value(0).toString();
-				templateCover.existingCoverGroupBox->setTitle(album);
+				templateCover.albumCoverGroupBox->setTitle(album);
 
 				QSize s(_fetchDialog->coverValueSize(), _fetchDialog->coverValueSize());
 				QSize s2(_fetchDialog->coverValueSize() + 10, _fetchDialog->coverValueSize() + 10);
@@ -149,12 +166,27 @@ void CoverFetcher::fetch()
 				templateCover.remoteCovers->setItemDelegate(new CoverWidgetItemDelegate(templateCover.remoteCovers));
 
 				QListWidgetItem *currentCover = new QListWidgetItem();
+				currentCover->setData(FetchDialog::LW_Album, album);
+				currentCover->setData(FetchDialog::LW_Artist, artist);
 
-				/// XXX: behold, internal covers are ignored
-				if (!q.record().value(1).toString().isEmpty()) {
-					currentCover->setIcon(QIcon(q.record().value(1).toString()));
-				} else {
+				QString coverAbsPath = q.record().value(1).toString();
+				bool internalCover = q.record().value(2).toBool();
+				if (coverAbsPath.isEmpty() && internalCover == false) {
 					currentCover->setIcon(QIcon(":/icons/disc"));
+				} else if (internalCover) {
+					QSqlQuery oneTrack(db);
+					oneTrack.prepare("SELECT absPath FROM tracks WHERE artist = ? AND album = ? LIMIT 1");
+					oneTrack.addBindValue(artist);
+					oneTrack.addBindValue(album);
+					if (oneTrack.exec()) {
+						oneTrack.next();
+						FileHelper fh(oneTrack.record().value(0).toString());
+						QPixmap p;
+						p.loadFromData(fh.extractCover()->byteArray());
+						currentCover->setIcon(p);
+					}
+				} else {
+					currentCover->setIcon(QIcon(coverAbsPath));
 				}
 
 				templateCover.currentCover->addItem(currentCover);
@@ -238,8 +270,8 @@ void CoverFetcher::fetchReleases(const QByteArray &ba)
 		qDebug() << "while:" << it.key() << it.value();
 		foreach (QGroupBox *gb, _fetchDialog->findChildren<QGroupBox*>()) {
 			qDebug() << "foreach:" << gb->title();
-			if (it.key().contains(gb->title().toLower()) || gb->title().toLower().contains(it.key()) ||
-					uiLevenshteinDistance(gb->title().toLower().toStdString(), it.key().toStdString()) < 2) {
+			if (uiLevenshteinDistance(gb->title().toLower().toStdString(), it.key().toStdString()) < 4 ||
+					it.key().contains(gb->title().toLower()) || gb->title().toLower().contains(it.key())) {
 				qDebug() << "uiLevenshteinDistance: get the covert art for " << gb->title() << it.key() << it.value();
 				/// FIXME: find a way to get the 500px thumbnail and to automatically download the large one after
 				QUrl url("http://coverartarchive.org/release-group/" + it.value() + "/front");

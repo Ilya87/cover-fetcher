@@ -24,8 +24,6 @@ private:
 
 	int fileType;
 
-	static const QStringList suff;
-
 	QFileInfo _fileInfo;
 
 	Q_ENUMS(extension)
@@ -52,7 +50,7 @@ private:
 public:
 	virtual ~FileHelper();
 
-	inline static QStringList suffixes() { return suff; }
+	static const QStringList suffixes();
 
 	/** Field ArtistAlbum if exists (in a compilation for example). */
 	QString artistAlbum() const;
@@ -88,6 +86,8 @@ public:
 	QString comment() const;
 	bool save();
 	inline QFileInfo fileInfo() const { return _fileInfo; }
+
+	inline TagLib::File *file() { return _file; }
 
 private:
 	QString convertKeyToID3v2Key(QString key);

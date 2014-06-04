@@ -50,6 +50,9 @@ private slots:
 	void fetchArtists(const QByteArray &ba);
 
 	void fetchReleases(const QByteArray &ba);
+
+signals:
+	void refreshView();
 };
 
 #endif // COVERFETCHER_H

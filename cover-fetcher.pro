@@ -40,7 +40,8 @@ HEADERS += \
     sqldatabase.h \
     fetchdialog.h \
     settings.h \
-    coverwidgetitemdelegate.h
+    coverwidgetitemdelegate.h \
+    cover.h
 
 FORMS += \
     fetchdialog.ui \
