@@ -42,7 +42,7 @@ public:
 
 	virtual QAction * action(const QString & /*view*/, QMenu * /*parent*/);
 
-	virtual void setSelectionModel(const QString &view, QItemSelectionModel *selectionModel);
+	virtual void setSelectedTracksModel(const QString &view, SelectedTracksModel *selectedTracksModel);
 };
 
 #endif // ITEMVIEWPLUGIN_H

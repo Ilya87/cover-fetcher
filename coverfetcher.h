@@ -2,7 +2,7 @@
 #define COVERFETCHER_H
 
 #include "fetchdialog.h"
-#include <QItemSelectionModel>
+#include "model/selectedtracksmodel.h"
 #include <QMenu>
 #include <QNetworkAccessManager>
 #include <QUrl>
@@ -18,7 +18,7 @@ class MIAMCORE_LIBRARY CoverFetcher : public QObject
 {
 	Q_OBJECT
 private:
-	QItemSelectionModel *_selectionModel;
+	SelectedTracksModel *_selectedTracksModel;
 	FetchDialog *_fetchDialog;
 	QNetworkAccessManager *_manager;
 	QMap<QUrl, QString> _releasesGroup;
@@ -35,7 +35,7 @@ private:
 public:
 	explicit CoverFetcher(QObject *parent);
 
-	inline void setSelectionModel(QItemSelectionModel *selectionModel) { _selectionModel = selectionModel; }
+	inline void setSelectedTracksModel(SelectedTracksModel *selectedTracksModel) { _selectedTracksModel = selectedTracksModel; }
 
 	QAction * action(QMenu *parentMenu);
 

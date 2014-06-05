@@ -29,19 +29,20 @@ SOURCES += \
     coverwidgetitemdelegate.cpp
 
 HEADERS += \
+    model/librarysqlmodel.h \
+    model/selectedtracksmodel.h \
     basicplugininterface.h \
-    miamcore_global.h \
-    itemviewplugininterface.h \
-    itemviewplugin.h \
+    cover.h \
     coverfetcher.h \
-    librarysqlmodel.h \
-    filehelper.h \
-    mediaplayerplugininterface.h \
-    sqldatabase.h \
-    fetchdialog.h \
-    settings.h \
     coverwidgetitemdelegate.h \
-    cover.h
+    fetchdialog.h \
+    filehelper.h \
+    itemviewplugin.h \
+    itemviewplugininterface.h \
+    mediaplayerplugininterface.h \
+    miamcore_global.h \
+    settings.h \
+    sqldatabase.h
 
 FORMS += \
     fetchdialog.ui \

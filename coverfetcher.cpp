@@ -12,18 +12,20 @@
 #include <QUrl>
 #include <QXmlStreamReader>
 
-#include <QtDebug>
-
 #include "ui_templateCover.h"
 #include "coverwidgetitemdelegate.h"
+#include "filehelper.h"
+#include "cover.h"
 
 #include <string>
 #include <iostream>
 
+#include <QtDebug>
+
 using namespace std;
 
 CoverFetcher::CoverFetcher(QObject *parent) :
-	QObject(parent), _selectionModel(NULL)
+	QObject(parent), _selectedTracksModel(NULL)
 {
 	_fetchDialog = new FetchDialog;
 	// Foward signal
@@ -88,42 +90,54 @@ void CoverFetcher::dispatchReply(QNetworkReply *reply)
 	}
 }
 
-#include "filehelper.h"
-#include "cover.h"
-
 void CoverFetcher::fetch()
 {
 	_releasesGroup.clear();
-
+	qDebug() << "selectedTracks";
+	qDebug() << _selectedTracksModel->selectedTracks();
 	QStringList artists;
-	foreach (QModelIndex index, _selectionModel->selectedIndexes()) {
+	/*foreach (QModelIndex index, _selectionModel->selectedIndexes()) {
 		if (index.column() == 0) {
 			QVariant v = index.data(Qt::UserRole + 1);
 			if (v.isValid()) {
+				qDebug() << "type" << v.toInt();
 				/// FIXME: Magic numbers from LibraryTreeView class
 				/// Problem: LibraryTreeView is in MiamPlayer, not MiamCore, so it's not supposed to be accessible
-				/// So, it's not relevant to create an enumeration in MiamCore just for a specific view
+				/// It's not relevant to create an enumeration in MiamCore just for a specific view
 				switch (v.toInt()) {
 				case 0: {
 					qDebug() << "fetch covers for this artist" << index.data();
 					artists.append(index.data().toString());
 					break;
 				}
-				case 1:
-					qDebug() << "fetch cover for this album" << index.data();
+				case 1: {
+					QString album = index.data().toString();
+					qDebug() << "fetch cover for this album" << album;
+					qDebug() << "parent is valid?" << index.parent().isValid();
+					if (index.parent().isValid()) {
+						qDebug() << index.parent().data().toString();
+					} else {
+						qDebug() << "parent is invalid!";
+						qDebug() << "child is valid?" << index.child(0, 0).isValid();
+						qDebug() << "children" << index.model()->rowCount(index);
+					}
 					break;
+				}
 				default:
 					break;
 				}
+			} else if (index.parent().isValid() && index.child(0, 0).isValid()) {
+				// Table Model (like TagEditor)
+				//index.sibling()
 			}
 		}
-	}
+	}*/
 
 	// TABLE tracks (artist varchar(255), artistAlbum varchar(255), album varchar(255),
 	//				title varchar(255), trackNumber INTEGER, discNumber INTEGER, year INTEGER,
 	//				absPath varchar(255) PRIMARY KEY ASC, path varchar(255),
 	//				coverAbsPath varchar(255), internalCover INTEGER DEFAULT 0)
-	SqlDatabase db;
+	/*SqlDatabase db;
 	db.open();
 	foreach (QString artist, artists) {
 
@@ -182,8 +196,11 @@ void CoverFetcher::fetch()
 						oneTrack.next();
 						FileHelper fh(oneTrack.record().value(0).toString());
 						QPixmap p;
-						p.loadFromData(fh.extractCover()->byteArray());
-						currentCover->setIcon(p);
+						Cover *c = fh.extractCover();
+						if (p.loadFromData(c->byteArray())) {
+							currentCover->setIcon(p);
+						}
+						delete c;
 					}
 				} else {
 					currentCover->setIcon(QIcon(coverAbsPath));
@@ -200,7 +217,7 @@ void CoverFetcher::fetch()
 	db.close();
 
 	_fetchDialog->show();
-	_fetchDialog->activateWindow();
+	_fetchDialog->activateWindow();*/
 }
 
 void CoverFetcher::fetchArtists(const QByteArray &ba)

@@ -51,7 +51,7 @@ QAction * ItemViewPlugin::action(const QString &view, QMenu *parent)
 	return a;
 }
 
-void ItemViewPlugin::setSelectionModel(const QString &view, QItemSelectionModel *selectionModel)
+void ItemViewPlugin::setSelectedTracksModel(const QString &view, SelectedTracksModel *selectedTracksModel)
 {
-	_coverFetchers.value(view)->setSelectionModel(selectionModel);
+	_coverFetchers.value(view)->setSelectedTracksModel(selectedTracksModel);
 }
