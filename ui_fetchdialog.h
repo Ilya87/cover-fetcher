@@ -93,7 +93,7 @@ public:
         scrollArea->setWidgetResizable(true);
         scrollAreaWidgetContents = new QWidget();
         scrollAreaWidgetContents->setObjectName(QStringLiteral("scrollAreaWidgetContents"));
-        scrollAreaWidgetContents->setGeometry(QRect(0, 0, 616, 165));
+        scrollAreaWidgetContents->setGeometry(QRect(0, 0, 620, 181));
         verticalLayout_3 = new QVBoxLayout(scrollAreaWidgetContents);
         verticalLayout_3->setSpacing(0);
         verticalLayout_3->setObjectName(QStringLiteral("verticalLayout_3"));

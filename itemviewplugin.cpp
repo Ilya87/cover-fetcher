@@ -6,7 +6,12 @@
 
 ItemViewPlugin::ItemViewPlugin()
 	: QObject()
-{}
+{
+	Settings *settings = Settings::getInstance();
+	if (!settings->value("CoverFetcher/coverValueSize").isValid()) {
+		settings->setValue("CoverFetcher/coverValueSize", 64);
+	}
+}
 
 ItemViewPlugin::~ItemViewPlugin()
 {

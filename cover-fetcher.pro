@@ -48,3 +48,21 @@ FORMS += \
     fetchdialog.ui \
     templateCover.ui \
     config.ui
+
+TRANSLATIONS += translations/CoverFetcher_ar.ts \
+    translations/CoverFetcher_cs.ts \
+    translations/CoverFetcher_de.ts \
+    translations/CoverFetcher_en.ts \
+    translations/CoverFetcher_es.ts \
+    translations/CoverFetcher_fr.ts \
+    translations/CoverFetcher_it.ts \
+    translations/CoverFetcher_ja.ts \
+    translations/CoverFetcher_kr.ts \
+    translations/CoverFetcher_pt.ts \
+    translations/CoverFetcher_ru.ts \
+    translations/CoverFetcher_th.ts \
+    translations/CoverFetcher_vn.ts \
+    translations/CoverFetcher_zh.ts
+
+RESOURCES += \
+    resources.qrc

@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>translations/CoverFetcher_en.qm</file>
+        <file>translations/CoverFetcher_fr.qm</file>
+    </qresource>
+</RCC>

@@ -26,11 +26,11 @@ private:
 	Q_ENUMS(Fetch_Operations)
 
 public:
-	enum Fetch_Operations { Fetch_Artists = 0,
-							Fetch_Releases = 1,
-							Download_Cover = 2};
+	enum Fetch_Operations { Fetch_Releases = 0,
+							Download_Cover = 1};
 private:
-	Fetch_Operations _currentCall;
+	//Fetch_Operations _currentCall;
+	QMap<QUrl, Fetch_Operations> _currentCalls;
 
 public:
 	explicit CoverFetcher(QObject *parent);
@@ -46,8 +46,6 @@ private slots:
 	void dispatchReply(QNetworkReply *reply);
 
 	void fetch();
-
-	void fetchArtists(const QByteArray &ba);
 
 	void fetchReleases(const QByteArray &ba);
 

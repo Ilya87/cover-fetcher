@@ -32,13 +32,8 @@ void CoverWidgetItemDelegate::paint(QPainter *painter, const QStyleOptionViewIte
 	QListWidgetItem *item = _listWidget->item(index.row());
 	QRect cover(option.rect.x() + 1, option.rect.y() + 1, _listWidget->iconSize().width() - 1, _listWidget->iconSize().height() - 1);
 
-
-	Settings *settings = Settings::getInstance();
-	settings->beginGroup("CoverFetcher");
-	int coverSize = settings->value("coverValueSize").toInt();
-	settings->endGroup();
-
-	QRect target(cover.topLeft(), QSize(coverSize, coverSize));
+	int v = Settings::getInstance()->value("CoverFetcher/coverValueSize", 64).toInt();
+	QRect target(cover.topLeft(), QSize(v, v));
 	painter->drawPixmap(target, item->icon().pixmap(_listWidget->iconSize()), cover);
 
 	// Checkbox

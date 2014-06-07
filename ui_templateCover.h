@@ -43,6 +43,7 @@ public:
         sizePolicy.setVerticalStretch(0);
         sizePolicy.setHeightForWidth(TemplateCovers->sizePolicy().hasHeightForWidth());
         TemplateCovers->setSizePolicy(sizePolicy);
+        TemplateCovers->setWindowTitle(QStringLiteral("Form"));
         horizontalLayout = new QHBoxLayout(TemplateCovers);
         horizontalLayout->setSpacing(0);
         horizontalLayout->setObjectName(QStringLiteral("horizontalLayout"));
@@ -112,7 +113,7 @@ public:
 
     void retranslateUi(QWidget *TemplateCovers)
     {
-        TemplateCovers->setWindowTitle(QApplication::translate("TemplateCovers", "Form", 0));
+        Q_UNUSED(TemplateCovers);
     } // retranslateUi
 
 };

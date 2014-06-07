@@ -23,13 +23,10 @@ FetchDialog::FetchDialog(QWidget *parent) :
 	connect(previewSizeSlider, &QSlider::valueChanged, this, &FetchDialog::updateCoverSize);
 
 	Settings *settings = Settings::getInstance();
-	settings->beginGroup("CoverFetcher");
-	_coverValueSize = settings->value("coverValueSize", 64).toInt();
 
 	// Setting the value will trigger valueChanged connected upthere on purpose
-	previewSizeSlider->setValue(settings->value("previewSizeSliderValue", 1).toInt());
-	restoreGeometry(settings->value("geometry").toByteArray());
-	settings->endGroup();
+	previewSizeSlider->setValue(settings->value("CoverFetcher/previewSizeSliderValue", 1).toInt());
+	restoreGeometry(settings->value("CoverFetcher/geometry").toByteArray());
 
 	// Filter on apply button only
 	connect(buttonBox, &QDialogButtonBox::clicked, this, [=](QAbstractButton *button) {
@@ -56,18 +53,12 @@ void FetchDialog::clear()
 	}
 	scrollArea->verticalScrollBar()->setValue(0);
 
-	Settings *settings = Settings::getInstance();
-	settings->beginGroup("CoverFetcher");
-	settings->setValue("geometry", saveGeometry());
-	settings->endGroup();
+	Settings::getInstance()->setValue("CoverFetcher/geometry", saveGeometry());
 }
 
 void FetchDialog::applyChanges()
 {
-	Settings *settings = Settings::getInstance();
-	settings->beginGroup("CoverFetcher");
-	bool integrateCoverToFiles = settings->value("integrateCoverToFiles").toBool();
-	settings->endGroup();
+	bool integrateCoverToFiles = Settings::getInstance()->value("CoverFetcher/integrateCoverToFiles").toBool();
 
 	SqlDatabase db;
 	db.open();
@@ -118,39 +109,38 @@ void FetchDialog::applyChanges()
 
 void FetchDialog::updateCoverSize(int value)
 {
+	int size;
 	switch (value) {
 	case 0:
-		_coverValueSize = 32;
+		size = 32;
 		break;
 	default:
 	case 1:
-		_coverValueSize = 64;
+		size = 64;
 		break;
 	case 2:
-		_coverValueSize = 100;
+		size = 100;
 		break;
 	case 3:
-		_coverValueSize = 250;
+		size = 250;
 		break;
 	case 4:
-		_coverValueSize = 500;
+		size = 500;
 		break;
 	}
 
 	Settings *settings = Settings::getInstance();
-	settings->beginGroup("CoverFetcher");
-	settings->setValue("coverValueSize", _coverValueSize);
-	settings->setValue("previewSizeSliderValue", value);
-	settings->endGroup();
-	previewSizeValue->setText(QString("%1px").arg(_coverValueSize));
-	QSize iconSize(_coverValueSize, _coverValueSize);
+	settings->setValue("CoverFetcher/coverValueSize", size);
+	settings->setValue("CoverFetcher/previewSizeSliderValue", value);
+	previewSizeValue->setText(QString(tr("%1px")).arg(size));
+	QSize iconSize(size, size);
 	foreach (QListWidget *listWidget, this->findChildren<QListWidget*>()) {
 		listWidget->setIconSize(iconSize);
-		listWidget->setMinimumHeight(_coverValueSize + 10);
-		listWidget->setMaximumHeight(_coverValueSize + 10);
+		listWidget->setMinimumHeight(size + 10);
+		listWidget->setMaximumHeight(size + 10);
 		//if (listWidget->objectName() == "currentCover") {
-		listWidget->setMinimumWidth(_coverValueSize + 10);
-		listWidget->setMaximumWidth(_coverValueSize + 10);
+		listWidget->setMinimumWidth(size + 10);
+		listWidget->setMaximumWidth(size + 10);
 		//}
 	}
 }

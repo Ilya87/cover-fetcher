@@ -12,7 +12,7 @@ class FetchDialog : public QDialog, public Ui::FetchDialog
 {
 	Q_OBJECT
 private:
-	int _coverValueSize;
+	//int *_coverValueSize;
 
 	Q_ENUMS(ListWidgetUserType)
 
@@ -23,7 +23,7 @@ public:
 							  LW_Album			= Qt::UserRole + 2,
 							  LW_TmpCoverPath	= Qt::UserRole + 3};
 
-	inline int coverValueSize() const { return _coverValueSize; }
+	//inline int coverValueSize() const { return *_coverValueSize; }
 
 protected:
 	void closeEvent(QCloseEvent *e);

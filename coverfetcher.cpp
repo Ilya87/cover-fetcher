@@ -16,6 +16,7 @@
 #include "coverwidgetitemdelegate.h"
 #include "filehelper.h"
 #include "cover.h"
+#include "settings.h"
 
 #include <string>
 #include <iostream>
@@ -37,22 +38,22 @@ CoverFetcher::CoverFetcher(QObject *parent) :
 
 QAction * CoverFetcher::action(QMenu *parentMenu)
 {
-	QAction *action = new QAction("Fetch covers", parentMenu);
+	QAction *action = new QAction(tr("Fetch covers"), parentMenu);
 	connect(action, &QAction::triggered, this, &CoverFetcher::fetch);
 	return action;
 }
 
 void CoverFetcher::dispatchReply(QNetworkReply *reply)
 {
+	qDebug() << reply->isFinished() << reply->url();
 	QByteArray ba = reply->readAll();
 	QString path = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+
 	// Dispatch request
-	switch (_currentCall) {
-	case Fetch_Artists:
-		this->fetchArtists(ba);
-		break;
+	Fetch_Operations op = _currentCalls.value(reply->url());
+	switch (op) {
 	case Fetch_Releases:
-		/// XXX
+		this->fetchReleases(ba);
 		break;
 	case Download_Cover: {
 		// In case we don't get the picture at the first attempt, try again
@@ -83,7 +84,8 @@ void CoverFetcher::dispatchReply(QNetworkReply *reply)
 			QString release = _releasesGroup.value(reply->url());
 			_releasesGroup.remove(reply->url());
 			_releasesGroup.insert(newUrl, release);
-			_manager->get(QNetworkRequest(newUrl));
+			QNetworkReply *r = _manager->get(QNetworkRequest(newUrl));
+			_currentCalls.insert(r->url(), Download_Cover);
 		}
 		break;
 	}
@@ -93,123 +95,87 @@ void CoverFetcher::dispatchReply(QNetworkReply *reply)
 void CoverFetcher::fetch()
 {
 	_releasesGroup.clear();
-	qDebug() << "selectedTracks";
-	qDebug() << _selectedTracksModel->selectedTracks();
-	QStringList artists;
-	/*foreach (QModelIndex index, _selectionModel->selectedIndexes()) {
-		if (index.column() == 0) {
-			QVariant v = index.data(Qt::UserRole + 1);
-			if (v.isValid()) {
-				qDebug() << "type" << v.toInt();
-				/// FIXME: Magic numbers from LibraryTreeView class
-				/// Problem: LibraryTreeView is in MiamPlayer, not MiamCore, so it's not supposed to be accessible
-				/// It's not relevant to create an enumeration in MiamCore just for a specific view
-				switch (v.toInt()) {
-				case 0: {
-					qDebug() << "fetch covers for this artist" << index.data();
-					artists.append(index.data().toString());
-					break;
-				}
-				case 1: {
-					QString album = index.data().toString();
-					qDebug() << "fetch cover for this album" << album;
-					qDebug() << "parent is valid?" << index.parent().isValid();
-					if (index.parent().isValid()) {
-						qDebug() << index.parent().data().toString();
-					} else {
-						qDebug() << "parent is invalid!";
-						qDebug() << "child is valid?" << index.child(0, 0).isValid();
-						qDebug() << "children" << index.model()->rowCount(index);
-					}
-					break;
-				}
-				default:
-					break;
-				}
-			} else if (index.parent().isValid() && index.child(0, 0).isValid()) {
-				// Table Model (like TagEditor)
-				//index.sibling()
-			}
-		}
-	}*/
+	_currentCalls.clear();
 
+	QStringList tracks = _selectedTracksModel->selectedTracks();
 	// TABLE tracks (artist varchar(255), artistAlbum varchar(255), album varchar(255),
 	//				title varchar(255), trackNumber INTEGER, discNumber INTEGER, year INTEGER,
 	//				absPath varchar(255) PRIMARY KEY ASC, path varchar(255),
 	//				coverAbsPath varchar(255), internalCover INTEGER DEFAULT 0)
-	/*SqlDatabase db;
+
+	SqlDatabase db;
 	db.open();
-	foreach (QString artist, artists) {
 
-		QLabel *labelArtist = new QLabel("Artist: " + artist);
-		_fetchDialog->scrollAreaWidgetContents->layout()->addWidget(labelArtist);
+	QString strArtistsAlbums("SELECT DISTINCT artist, album, coverAbsPath, internalCover FROM tracks WHERE absPath IN (%1)");
+	// Format and concatenate all tracks in one big string. Replaces single quote with double quote
+	QString t = tracks.replaceInStrings("'","''").join("\",\"").prepend("\"").append("\"");
+	QSqlQuery qArtistsAlbums = db.exec(strArtistsAlbums.arg(t));
 
-		qDebug() << "fetching covers for" << artist;
-		/// XXX Behold: encode Url in a safe way
-		QNetworkRequest request(QUrl("http://musicbrainz.org/ws/2/release-group/?query=artist:%22" + artist + "%22;limit=100"));
-		request.setHeader(QNetworkRequest::UserAgentHeader, "MiamPlayer/0.6.3 ( https://github.com/MBach/Miam-Player )" );
-		_currentCall = Fetch_Artists;
-		_manager->get(request);
+	QString prevArtist = "";
+	int size = Settings::getInstance()->value("CoverFetcher/coverValueSize").toInt();
+	qDebug() << "size" << size;
+	QSize s(size, size);
+	QSize s2(size + 10, size + 10);
+	while (qArtistsAlbums.next()) {
+		QString artist = qArtistsAlbums.record().value(0).toString();
+		QString album = qArtistsAlbums.record().value(1).toString();
+		QString coverAbsPath = qArtistsAlbums.record().value(2).toString();
+		bool internalCover = qArtistsAlbums.record().value(3).toBool();
 
-		QSqlQuery q(db);
-		q.prepare("SELECT DISTINCT album, coverAbsPath, internalCover FROM tracks WHERE artist = ?");
-		q.addBindValue(artist);
-
-		if (q.exec()) {
-			while (q.next()) {
-				qDebug() << "q" << q.record().value(0);
-				Ui_TemplateCovers templateCover;
-				QWidget *covers = new QWidget(_fetchDialog);
-				templateCover.setupUi(covers);
-				// Fill the groupBox title with an Album from this Artist
-				QString album = q.record().value(0).toString();
-				templateCover.albumCoverGroupBox->setTitle(album);
-
-				QSize s(_fetchDialog->coverValueSize(), _fetchDialog->coverValueSize());
-				QSize s2(_fetchDialog->coverValueSize() + 10, _fetchDialog->coverValueSize() + 10);
-
-				templateCover.currentCover->setDragDropMode(QListWidget::NoDragDrop);
-				templateCover.currentCover->setIconSize(s);
-				templateCover.currentCover->setMinimumSize(s2);
-				templateCover.currentCover->setMaximumSize(s2);
-				templateCover.currentCover->setItemDelegate(new CoverWidgetItemDelegate(templateCover.currentCover));
-
-				templateCover.remoteCovers->setDragDropMode(QListWidget::NoDragDrop);
-				templateCover.remoteCovers->setIconSize(s);
-				templateCover.remoteCovers->setMaximumHeight(s2.height());
-				templateCover.remoteCovers->setItemDelegate(new CoverWidgetItemDelegate(templateCover.remoteCovers));
-
-				QListWidgetItem *currentCover = new QListWidgetItem();
-				currentCover->setData(FetchDialog::LW_Album, album);
-				currentCover->setData(FetchDialog::LW_Artist, artist);
-
-				QString coverAbsPath = q.record().value(1).toString();
-				bool internalCover = q.record().value(2).toBool();
-				if (coverAbsPath.isEmpty() && internalCover == false) {
-					currentCover->setIcon(QIcon(":/icons/disc"));
-				} else if (internalCover) {
-					QSqlQuery oneTrack(db);
-					oneTrack.prepare("SELECT absPath FROM tracks WHERE artist = ? AND album = ? LIMIT 1");
-					oneTrack.addBindValue(artist);
-					oneTrack.addBindValue(album);
-					if (oneTrack.exec()) {
-						oneTrack.next();
-						FileHelper fh(oneTrack.record().value(0).toString());
-						QPixmap p;
-						Cover *c = fh.extractCover();
-						if (p.loadFromData(c->byteArray())) {
-							currentCover->setIcon(p);
-						}
-						delete c;
-					}
-				} else {
-					currentCover->setIcon(QIcon(coverAbsPath));
-				}
-
-				templateCover.currentCover->addItem(currentCover);
-				_fetchDialog->scrollAreaWidgetContents->layout()->addWidget(covers);
-			}
+		// Send a new request for fetching artists only if it's a new one
+		if (artist != prevArtist) {
+			QLabel *labelArtist = new QLabel("Artist: " + artist);
+			_fetchDialog->scrollAreaWidgetContents->layout()->addWidget(labelArtist);
+			qDebug() << "fetching covers for" << artist;
+			/// XXX Behold: encode Url in a safe way
+			QNetworkRequest request(QUrl("http://musicbrainz.org/ws/2/release-group/?query=artist:%22" + artist + "%22;limit=100"));
+			request.setHeader(QNetworkRequest::UserAgentHeader, "MiamPlayer/0.6.3 ( https://github.com/MBach/Miam-Player )" );
+			QNetworkReply *n = _manager->get(request);
+			_currentCalls.insert(n->url(), Fetch_Releases);
 		}
+
+		Ui_TemplateCovers templateCover;
+		QWidget *covers = new QWidget(_fetchDialog);
+		templateCover.setupUi(covers);
+		// Fill the groupBox title with an Album from this Artist
+		templateCover.albumCoverGroupBox->setTitle(album);
+
+		QListWidgetItem *currentCover = new QListWidgetItem();
+		currentCover->setData(FetchDialog::LW_Album, album);
+		currentCover->setData(FetchDialog::LW_Artist, artist);
+
+		if (coverAbsPath.isEmpty() && internalCover == false) {
+			currentCover->setIcon(QIcon(":/icons/disc"));
+		} else if (internalCover) {
+			QSqlQuery oneTrack(db);
+			oneTrack.prepare("SELECT absPath FROM tracks WHERE artist = ? AND album = ? LIMIT 1");
+			oneTrack.addBindValue(artist);
+			oneTrack.addBindValue(album);
+			if (oneTrack.exec()) {
+				oneTrack.next();
+				FileHelper fh(oneTrack.record().value(0).toString());
+				QPixmap p;
+				Cover *c = fh.extractCover();
+				if (p.loadFromData(c->byteArray())) {
+					currentCover->setIcon(p);
+				}
+				delete c;
+			}
+		} else {
+			currentCover->setIcon(QIcon(coverAbsPath));
+		}
+		templateCover.currentCover->addItem(currentCover);
+		_fetchDialog->scrollAreaWidgetContents->layout()->addWidget(covers);
+		prevArtist = artist;
+	}
+
+	// Initialize size with right value from slider
+	foreach (QListWidget *list, _fetchDialog->findChildren<QListWidget*>()) {
+		list->setDragDropMode(QListWidget::NoDragDrop);
+		list->setIconSize(s);
+		list->setMinimumSize(s2);
+		list->setMaximumSize(s2);
+		list->setItemDelegate(new CoverWidgetItemDelegate(list));
 	}
 
 	QSpacerItem *vSpacer = new QSpacerItem(1, 1, QSizePolicy::Fixed, QSizePolicy::Expanding);
@@ -217,44 +183,7 @@ void CoverFetcher::fetch()
 	db.close();
 
 	_fetchDialog->show();
-	_fetchDialog->activateWindow();*/
-}
-
-void CoverFetcher::fetchArtists(const QByteArray &ba)
-{
-	/*QXmlStreamReader xml(ba);
-	QMap<QString, int> map;
-	while(!xml.atEnd() && !xml.hasError()) {
-
-		QXmlStreamReader::TokenType token = xml.readNext();
-		// Parse start elements
-		if (token == QXmlStreamReader::StartElement) {
-			if (xml.name() == "artist") {
-				if (xml.attributes().hasAttribute("id")) {
-					QStringRef sr = xml.attributes().value("id");
-					qDebug() << sr;
-					if (map.contains(sr.toString())) {
-						int i = map.value(sr.toString());
-						map.insert(sr.toString(), ++i);
-					} else {
-						map.insert(sr.toString(), 1);
-					}
-				}
-			}
-		}
-	}
-	int max = -1;
-	QString mbid;
-	QMapIterator<QString, int> it(map);
-	qDebug() << "highest mbid" << mbid;
-	while (it.hasNext()) {
-		it.next();
-		if (max < it.value()) {
-			max = it.value();
-			mbid = it.key();
-		}
-	}*/
-	this->fetchReleases(ba);
+	_fetchDialog->activateWindow();
 }
 
 void CoverFetcher::fetchReleases(const QByteArray &ba)
@@ -284,19 +213,19 @@ void CoverFetcher::fetchReleases(const QByteArray &ba)
 	/// Complexity: should be improved!
 	while (it.hasNext()) {
 		it.next();
-		qDebug() << "while:" << it.key() << it.value();
+		//qDebug() << "while:" << it.key() << it.value();
 		foreach (QGroupBox *gb, _fetchDialog->findChildren<QGroupBox*>()) {
-			qDebug() << "foreach:" << gb->title();
+			//qDebug() << "foreach:" << gb->title();
 			if (uiLevenshteinDistance(gb->title().toLower().toStdString(), it.key().toStdString()) < 4 ||
 					it.key().contains(gb->title().toLower()) || gb->title().toLower().contains(it.key())) {
-				qDebug() << "uiLevenshteinDistance: get the covert art for " << gb->title() << it.key() << it.value();
+				//qDebug() << "uiLevenshteinDistance: get the covert art for " << gb->title() << it.key() << it.value();
 				/// FIXME: find a way to get the 500px thumbnail and to automatically download the large one after
 				QUrl url("http://coverartarchive.org/release-group/" + it.value() + "/front");
 				QNetworkRequest request(url);
 				request.setHeader(QNetworkRequest::UserAgentHeader, "MiamPlayer/0.6.3 ( https://github.com/MBach/Miam-Player )" );
-				_currentCall = Download_Cover;
 				_releasesGroup.insert(url, gb->title());
-				_manager->get(request);
+				QNetworkReply *reply = _manager->get(request);
+				_currentCalls.insert(reply->url(), Download_Cover);
 				//it.remove();
 				break;
 			}
@@ -306,7 +235,6 @@ void CoverFetcher::fetchReleases(const QByteArray &ba)
 
 // Compute Levenshtein Distance
 // Martin Ettl, 2012-10-05
-
 size_t CoverFetcher::uiLevenshteinDistance(const std::string &s1, const std::string &s2)
 {
 	const size_t m(s1.size());
