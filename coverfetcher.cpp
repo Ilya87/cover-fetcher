@@ -29,11 +29,17 @@ CoverFetcher::CoverFetcher(QObject *parent) :
 	QObject(parent), _selectedTracksModel(NULL)
 {
 	_fetchDialog = new FetchDialog;
-	// Foward signal
-	connect(_fetchDialog, &FetchDialog::refreshView, this, &CoverFetcher::refreshView);
-
 	_manager = new QNetworkAccessManager(this);
 	connect(_manager, &QNetworkAccessManager::finished, this, &CoverFetcher::dispatchReply);
+}
+
+void CoverFetcher::setSelectedTracksModel(SelectedTracksModel *selectedTracksModel)
+{
+	_selectedTracksModel = selectedTracksModel;
+	/// XXX: wow, kind of hack no?
+	connect(_fetchDialog, &FetchDialog::refreshView, this, [=]() {
+		_selectedTracksModel->updateSelectedTracks();
+	});
 }
 
 QAction * CoverFetcher::action(QMenu *parentMenu)
@@ -45,7 +51,7 @@ QAction * CoverFetcher::action(QMenu *parentMenu)
 
 void CoverFetcher::dispatchReply(QNetworkReply *reply)
 {
-	qDebug() << reply->isFinished() << reply->url();
+	//qDebug() << reply->isFinished() << reply->url();
 	QByteArray ba = reply->readAll();
 	QString path = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
 
@@ -113,7 +119,6 @@ void CoverFetcher::fetch()
 
 	QString prevArtist = "";
 	int size = Settings::getInstance()->value("CoverFetcher/coverValueSize").toInt();
-	qDebug() << "size" << size;
 	QSize s(size, size);
 	QSize s2(size + 10, size + 10);
 	while (qArtistsAlbums.next()) {

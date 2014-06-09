@@ -10,6 +10,7 @@ ItemViewPlugin::ItemViewPlugin()
 	Settings *settings = Settings::getInstance();
 	if (!settings->value("CoverFetcher/coverValueSize").isValid()) {
 		settings->setValue("CoverFetcher/coverValueSize", 64);
+		settings->setValue("CoverFetcher/integrateCoverToFiles", true);
 	}
 }
 
@@ -40,10 +41,6 @@ QStringList ItemViewPlugin::classesToExtend()
 	QStringList l = QStringList() << "LibraryTreeView" << "TagEditor";
 	foreach (QString clazz, l) {
 		CoverFetcher *cf = new CoverFetcher(this);
-		connect(cf, &CoverFetcher::refreshView, this, [=]() {
-			///XXX so what now? is it possible to send a signal?
-			//emit refreshView(clazz);
-		});
 		_coverFetchers.insert(clazz, cf);
 	}
 	return l;

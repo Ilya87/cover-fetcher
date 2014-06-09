@@ -35,7 +35,7 @@ private:
 public:
 	explicit CoverFetcher(QObject *parent);
 
-	inline void setSelectedTracksModel(SelectedTracksModel *selectedTracksModel) { _selectedTracksModel = selectedTracksModel; }
+	void setSelectedTracksModel(SelectedTracksModel *selectedTracksModel);
 
 	QAction * action(QMenu *parentMenu);
 
@@ -49,8 +49,8 @@ private slots:
 
 	void fetchReleases(const QByteArray &ba);
 
-signals:
-	void refreshView();
+//signals:
+//	void refreshView();
 };
 
 #endif // COVERFETCHER_H
