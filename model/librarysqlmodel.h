@@ -37,7 +37,7 @@ private slots:
 	void saveCoverRef(const QString &coverPath);
 
 	/** Reads a file from the filesystem and adds it into the library. */
-	void saveFileRef(const QString &absFilePath, bool emitSignal = true);
+	void saveFileRef(const QString &absFilePath);
 
 signals:
 	void coverWasUpdated(const QFileInfo &);
