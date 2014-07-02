@@ -23,7 +23,7 @@ private:
 public:
 	explicit LibrarySqlModel(const QSqlDatabase &db, QObject *parent = 0);
 
-	void updateLibrary(const QStringList &oldTracks, const QStringList &newTracks);
+	void updateLibrary(const QStringList &tracks);
 
 private:
 	void loadFromFileDB();

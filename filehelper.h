@@ -16,6 +16,9 @@ namespace TagLib {
 
 /**
  * \brief The FileHelper class is used to extract various but relevant fields in all types of tags (MP3, Flac, etc)
+ * \details
+ * \author      Matthieu Bachelier
+ * \copyright   GNU General Public License v3
  */
 class MIAMCORE_LIBRARY FileHelper
 {
@@ -40,6 +43,10 @@ public:
 		OGG		= 7
 	};
 
+	enum TagKey {
+		Artist
+	};
+
 	FileHelper(const QMediaContent &track);
 
 	FileHelper(const QString &filePath);
@@ -54,6 +61,7 @@ public:
 
 	/** Field ArtistAlbum if exists (in a compilation for example). */
 	QString artistAlbum() const;
+	void setArtistAlbum(const QString &artistAlbum);
 
 	/** Extract field disc number. */
 	int discNumber() const;
@@ -93,6 +101,8 @@ private:
 	QString convertKeyToID3v2Key(QString key);
 
 	QString extractFlacFeature(const QString &featureToExtract) const;
+
+	QString extractMp4Feature(const QString &featureToExtract) const;
 
 	QString extractMpegFeature(const QString &featureToExtract) const;
 };
