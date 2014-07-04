@@ -39,7 +39,6 @@ HEADERS += \
     filehelper.h \
     itemviewplugin.h \
     itemviewplugininterface.h \
-    mediaplayerplugininterface.h \
     miamcore_global.h \
     settings.h \
     sqldatabase.h
