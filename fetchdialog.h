@@ -10,34 +10,34 @@
  */
 class FetchDialog : public QDialog, public Ui::FetchDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 private:
-	//int *_coverValueSize;
+    //int *_coverValueSize;
 
-	Q_ENUMS(ListWidgetUserType)
+    Q_ENUMS(ListWidgetUserType)
 
 public:
-	explicit FetchDialog(QWidget *parent = 0);
+    explicit FetchDialog(QWidget *parent = 0);
 
-	enum ListWidgetUserType { LW_Artist			= Qt::UserRole + 1,
-							  LW_Album			= Qt::UserRole + 2,
-							  LW_TmpCoverPath	= Qt::UserRole + 3};
+    enum ListWidgetUserType { LW_Artist			= Qt::UserRole + 1,
+                              LW_Album			= Qt::UserRole + 2,
+                              LW_TmpCoverPath	= Qt::UserRole + 3};
 
-	//inline int coverValueSize() const { return *_coverValueSize; }
+    //inline int coverValueSize() const { return *_coverValueSize; }
 
 protected:
-	void closeEvent(QCloseEvent *e);
+    void closeEvent(QCloseEvent *e);
 
 private:
-	void clear();
+    void clear();
 
 private slots:
-	void applyChanges();
+    void applyChanges();
 
-	void updateCoverSize(int value);
+    void updateCoverSize(int value);
 
 signals:
-	void refreshView();
+    void refreshView();
 };
 
 #endif // FETCHDIALOG_H
