@@ -1,10 +1,10 @@
-#include "itemviewplugin.h"
+#include "itemview.h"
 #include "coverfetcher.h"
 #include "settings.h"
 
 #include <QtDebug>
 
-ItemViewPlugin::ItemViewPlugin()
+ItemView::ItemView()
 	: QObject()
 {
 	Settings *settings = Settings::getInstance();
@@ -14,12 +14,12 @@ ItemViewPlugin::ItemViewPlugin()
 	}
 }
 
-ItemViewPlugin::~ItemViewPlugin()
+ItemView::~ItemView()
 {
 	_coverFetchers.clear();
 }
 
-QWidget * ItemViewPlugin::configPage()
+QWidget * ItemView::configPage()
 {
 	QWidget *widget = new QWidget();
 	_ui.setupUi(widget);
@@ -36,7 +36,7 @@ QWidget * ItemViewPlugin::configPage()
 	return widget;
 }
 
-QStringList ItemViewPlugin::classesToExtend()
+QStringList ItemView::classesToExtend()
 {
 	QStringList l = QStringList() << "LibraryTreeView" << "TagEditor";
 	foreach (QString clazz, l) {
@@ -46,14 +46,14 @@ QStringList ItemViewPlugin::classesToExtend()
 	return l;
 }
 
-QAction * ItemViewPlugin::action(const QString &view, QMenu *parent)
+QAction * ItemView::action(const QString &view, QMenu *parent)
 {
 	CoverFetcher *cf = _coverFetchers.value(view);
 	QAction *a = cf->action(parent);
 	return a;
 }
 
-void ItemViewPlugin::setSelectedTracksModel(const QString &view, SelectedTracksModel *selectedTracksModel)
+void ItemView::setSelectedTracksModel(const QString &view, SelectedTracksModel *selectedTracksModel)
 {
 	_coverFetchers.value(view)->setSelectedTracksModel(selectedTracksModel);
 }

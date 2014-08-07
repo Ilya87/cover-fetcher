@@ -1,52 +1,33 @@
 #ifndef ITEMVIEWPLUGIN_H
 #define ITEMVIEWPLUGIN_H
 
-#include "itemviewplugininterface.h"
-#include "ui_config.h"
+#include "basicplugin.h"
+#include "model/selectedtracksmodel.h"
 
-class CoverFetcher;
+#include <QItemSelectionModel>
+#include <QMenu>
 
-/**
- * \brief       Fetch covers using MusicBrainz
- * \details		This plugin is the first plugin for MiamPlayer which goes on the web to do a specific job: fetching missing covers.
- *		It is more a proof-of-concept than a real plugin even though it's working. Interfaces are intended to be generic but it's
- *		difficult to make perfect interfaces when you only have written one plugin. Moreover, fetching covers using MusicBrainz' webservice
- *		is kind hard because string matching is a complex problem. In the future, other webservices could be added without too much effort.
- * \author      Matthieu Bachelier
- * \version     0.5
- * \copyright   GNU General Public License v3
- */
-class ItemViewPlugin : public QObject, public ItemViewPluginInterface
+class MIAMCORE_LIBRARY ItemViewPlugin : public BasicPlugin
 {
-	Q_OBJECT
-	Q_PLUGIN_METADATA(IID ItemViewPluginInterface_iid)
-	Q_INTERFACES(ItemViewPluginInterface)
-
-private:
-	QMap<QString, CoverFetcher*> _coverFetchers;
-
-	Ui::ConfigForm _ui;
-
 public:
-	explicit ItemViewPlugin();
+	virtual ~ItemViewPlugin() {}
 
-	virtual ~ItemViewPlugin();
+	virtual QStringList classesToExtend() = 0;
 
-	/// From BasicPluginInterface
-	virtual QWidget *configPage();
+	virtual bool hasSubMenu(const QString & /*view*/) const { return false; }
 
-	inline virtual bool isConfigurable() const { return true; }
+	virtual QMenu * menu(const QString & /*view*/, QMenu * /*parent*/) { return NULL; }
 
-	inline virtual QString name() const { return "CoverFetcher"; }
+	virtual QAction * action(const QString & /*view*/, QMenu * /*parent*/) { return NULL; }
 
-	inline virtual QString version() const { return "0.5"; }
-
-	/// From ItemViewPluginInterface
-	virtual QStringList classesToExtend();
-
-	virtual QAction * action(const QString & /*view*/, QMenu * /*parent*/);
-
-	virtual void setSelectedTracksModel(const QString &view, SelectedTracksModel *selectedTracksModel);
+	virtual void setSelectedTracksModel(const QString &view, SelectedTracksModel *) = 0;
 };
+QT_BEGIN_NAMESPACE
+
+#define ItemViewPlugin_iid "MiamPlayer.ItemViewPlugin"
+
+Q_DECLARE_INTERFACE(ItemViewPlugin, ItemViewPlugin_iid)
+
+QT_END_NAMESPACE
 
 #endif // ITEMVIEWPLUGIN_H

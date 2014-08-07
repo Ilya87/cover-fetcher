@@ -23,22 +23,21 @@ UI_DIR = $$PWD
 INSTALLS += target
 
 SOURCES += \
-    itemviewplugin.cpp \
     coverfetcher.cpp \
+    coverwidgetitemdelegate.cpp \
     fetchdialog.cpp \
-    coverwidgetitemdelegate.cpp
+    itemview.cpp
 
 HEADERS += \
     model/librarysqlmodel.h \
     model/selectedtracksmodel.h \
-    basicplugininterface.h \
+    basicplugin.h \
     cover.h \
     coverfetcher.h \
     coverwidgetitemdelegate.h \
     fetchdialog.h \
     filehelper.h \
-    itemviewplugin.h \
-    itemviewplugininterface.h \
+    itemview.h \
     miamcore_global.h \
     settings.h \
     sqldatabase.h
