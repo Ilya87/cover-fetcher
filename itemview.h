@@ -32,7 +32,7 @@ public:
 
 	virtual ~ItemView();
 
-	/// From BasicPluginInterface
+	/// From BasicPlugin
 	virtual QWidget *configPage();
 
 	inline virtual bool isConfigurable() const { return true; }
@@ -41,7 +41,7 @@ public:
 
 	inline virtual QString version() const { return "0.5"; }
 
-	/// From ItemViewPluginInterface
+	/// From ItemViewPlugin
 	virtual QStringList classesToExtend();
 
 	virtual QAction * action(const QString & /*view*/, QMenu * /*parent*/);
