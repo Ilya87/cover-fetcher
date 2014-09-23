@@ -5,6 +5,7 @@
 #include "settings.h"
 #include "sqldatabase.h"
 
+#include <QAbstractButton>
 #include <QGroupBox>
 #include <QListWidget>
 #include <QScrollBar>
