@@ -3,7 +3,7 @@
 #include "cover.h"
 #include "filehelper.h"
 #include "settings.h"
-#include "sqldatabase.h"
+#include "model/sqldatabase.h"
 
 #include <QAbstractButton>
 #include <QGroupBox>

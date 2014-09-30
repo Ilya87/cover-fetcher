@@ -1,5 +1,5 @@
 #include "coverfetcher.h"
-#include "sqldatabase.h"
+#include "model/sqldatabase.h"
 
 #include <QDir>
 #include <QNetworkReply>

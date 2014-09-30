@@ -22,15 +22,15 @@ UI_DIR = $$PWD
 
 INSTALLS += target
 
-SOURCES += \
-    coverfetcher.cpp \
+SOURCES += coverfetcher.cpp \
     coverwidgetitemdelegate.cpp \
     fetchdialog.cpp \
     itemview.cpp
 
-HEADERS += \
-    model/librarysqlmodel.h \
-    model/selectedtracksmodel.h \
+HEADERS += model/remoteobject.h \
+    model/remoteplaylist.h \
+    model/remotetrack.h \
+    model/sqldatabase.h \
     basicplugin.h \
     cover.h \
     coverfetcher.h \
