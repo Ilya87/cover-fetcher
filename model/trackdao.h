@@ -1,28 +1,27 @@
-#ifndef REMOTETRACK_H
-#define REMOTETRACK_H
+#ifndef TRACKDAO_H
+#define TRACKDAO_H
 
 #include <QIcon>
-#include "remoteobject.h"
+#include "genericdao.h"
 
 /**
- * \brief		The RemoteTrack class is a simple wrapper which contains basic informations about a file.
+ * \brief		The TrackDAO class is a simple wrapper which contains basic informations about a file.
  * \author		Matthieu Bachelier
  * \copyright   GNU General Public License v3
  */
-class MIAMCORE_LIBRARY RemoteTrack : public RemoteObject
+class MIAMCORE_LIBRARY TrackDAO : public GenericDAO
 {
 	Q_OBJECT
 private:
-	QString _album, _artist, _disc, _length, _source, _title, _trackNumber, _url, _year;
-	QIcon _icon;
+	QString _album, _artist, _disc, _iconPath, _length, _source, _title, _trackNumber, _url, _year;
 	int _rating;
 
 public:
-	explicit RemoteTrack(QObject *parent = 0);
+	explicit TrackDAO(QObject *parent = 0);
 
-	RemoteTrack(const RemoteTrack &remoteTrack);
+	TrackDAO(const TrackDAO &remoteTrack);
 
-	virtual ~RemoteTrack();
+	virtual ~TrackDAO();
 
 	QString album() const;
 	void setAlbum(const QString &album);
@@ -33,8 +32,8 @@ public:
 	QString disc() const;
 	void setDisc(const QString &disc);
 
-	QIcon icon() const;
-	void setIcon(const QIcon &icon);
+	QString iconPath() const;
+	void setIconPath(const QString &iconPath);
 
 	QString length() const;
 	void setLength(const QString &length);
@@ -58,4 +57,7 @@ public:
 	void setYear(const QString &year);
 };
 
-#endif // REMOTETRACK_H
+/** Register this class to convert in QVariant. */
+Q_DECLARE_METATYPE(TrackDAO)
+
+#endif // TRACKDAO_H

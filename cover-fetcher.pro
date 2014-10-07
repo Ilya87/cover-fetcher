@@ -27,10 +27,10 @@ SOURCES += coverfetcher.cpp \
     fetchdialog.cpp \
     itemview.cpp
 
-HEADERS += model/remoteobject.h \
-    model/remoteplaylist.h \
-    model/remotetrack.h \
+HEADERS += model/genericdao.h \
+    model/playlistdao.h \
     model/sqldatabase.h \
+    model/trackdao.h \
     basicplugin.h \
     cover.h \
     coverfetcher.h \
@@ -39,8 +39,7 @@ HEADERS += model/remoteobject.h \
     filehelper.h \
     itemview.h \
     miamcore_global.h \
-    settings.h \
-    sqldatabase.h
+    settings.h
 
 FORMS += \
     fetchdialog.ui \
