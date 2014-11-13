@@ -16,14 +16,14 @@
 #include <QtDebug>
 
 FetchDialog::FetchDialog(QWidget *parent) :
-	QDialog(parent, Qt::CustomizeWindowHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint)
+	QDialog(parent)
 {
 	this->setupUi(this);
 
 	// Change UI
 	connect(previewSizeSlider, &QSlider::valueChanged, this, &FetchDialog::updateCoverSize);
 
-	Settings *settings = Settings::getInstance();
+	Settings *settings = Settings::instance();
 
 	// Setting the value will trigger valueChanged connected upthere on purpose
 	previewSizeSlider->setValue(settings->value("CoverFetcher/previewSizeSliderValue", 1).toInt());
@@ -54,20 +54,20 @@ void FetchDialog::clear()
 	}
 	scrollArea->verticalScrollBar()->setValue(0);
 
-	Settings::getInstance()->setValue("CoverFetcher/geometry", saveGeometry());
+	Settings::instance()->setValue("CoverFetcher/geometry", saveGeometry());
 }
 
 void FetchDialog::applyChanges()
 {
-	bool integrateCoverToFiles = Settings::getInstance()->value("CoverFetcher/integrateCoverToFiles").toBool();
+	bool integrateCoverToFiles = Settings::instance()->value("CoverFetcher/integrateCoverToFiles").toBool();
 
-	SqlDatabase db;
-	db.open();
+	SqlDatabase *db = SqlDatabase::instance();
+	//db->open();
 
 	foreach (QGroupBox *gb, this->findChildren<QGroupBox*>("albumCoverGroupBox")) {
 		QListWidget *currentCoverList = gb->findChild<QListWidget*>("currentCover");
-		QString artist = currentCoverList->item(0)->data(LW_Artist).toString();
-		QString album = currentCoverList->item(0)->data(LW_Album).toString();
+		QString artistId = currentCoverList->item(0)->data(LW_Artist).toString();
+		QString albumId = currentCoverList->item(0)->data(LW_Album).toString();
 
 		// Right now, there's only one cover per album (one remote location)! So one can check at most 1 item...
 		QListWidget *remoteCoverList = gb->findChild<QListWidget*>("remoteCovers");
@@ -82,28 +82,31 @@ void FetchDialog::applyChanges()
 				if (integrateCoverToFiles) {
 
 					// Before creating the cover, we have to know which file to process
-					QSqlQuery findTracks(db);
-					findTracks.prepare("SELECT absPath FROM tracks WHERE artist = :artist AND album = :album");
-					findTracks.addBindValue(artist);
-					findTracks.addBindValue(album);
-					findTracks.exec();
+					QSqlQuery findTracks(*db);
+					findTracks.prepare("SELECT uri FROM tracks WHERE artistId = ? AND albumId = ?");
+					findTracks.addBindValue(artistId);
+					findTracks.addBindValue(albumId);
+					bool b = findTracks.exec();
+					qDebug() << "selecting tracks to update" << b << artistId << albumId;
 					while (findTracks.next()) {
 						FileHelper fh(findTracks.record().value(0).toString());
 						fh.setCover(&c);
-						fh.save();
+						b = fh.save();
+						qDebug() << "writing cover into file" << b << fh.title();
 					}
 
-					QSqlQuery updateTracks(db);
-					updateTracks.prepare("UPDATE tracks SET internalCover = 1 WHERE artist = :artist AND album = :album");
-					updateTracks.addBindValue(artist);
-					updateTracks.addBindValue(album);
-					updateTracks.exec();
+					QSqlQuery updateTracks(*db);
+					updateTracks.prepare("UPDATE tracks SET internalCover = 1 WHERE artistId = ? AND albumId = ?");
+					updateTracks.addBindValue(artistId);
+					updateTracks.addBindValue(albumId);
+					b = updateTracks.exec();
+					qDebug() << "updating tracks" << b;
 				}
 				break;
 			}
 		}
 	}
-	db.close();
+	//db->close();
 	this->close();
 	emit refreshView();
 }
@@ -130,7 +133,7 @@ void FetchDialog::updateCoverSize(int value)
 		break;
 	}
 
-	Settings *settings = Settings::getInstance();
+	Settings *settings = Settings::instance();
 	settings->setValue("CoverFetcher/coverValueSize", size);
 	settings->setValue("CoverFetcher/previewSizeSliderValue", value);
 	previewSizeValue->setText(QString(tr("%1px")).arg(size));

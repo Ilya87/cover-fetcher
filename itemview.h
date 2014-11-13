@@ -1,7 +1,7 @@
 #ifndef ITEMVIEW_H
 #define ITEMVIEW_H
 
-#include "itemviewplugin.h"
+#include "interfaces/itemviewplugin.h"
 #include "ui_config.h"
 
 class CoverFetcher;

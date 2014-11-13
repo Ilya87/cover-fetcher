@@ -32,7 +32,7 @@ void CoverWidgetItemDelegate::paint(QPainter *painter, const QStyleOptionViewIte
 	QListWidgetItem *item = _listWidget->item(index.row());
 	QRect cover(option.rect.x() + 1, option.rect.y() + 1, _listWidget->iconSize().width() - 1, _listWidget->iconSize().height() - 1);
 
-	int v = Settings::getInstance()->value("CoverFetcher/coverValueSize", 64).toInt();
+	int v = Settings::instance()->value("CoverFetcher/coverValueSize", 64).toInt();
 	QRect target(cover.topLeft(), QSize(v, v));
 	painter->drawPixmap(target, item->icon().pixmap(_listWidget->iconSize()), cover);
 

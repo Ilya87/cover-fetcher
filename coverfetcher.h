@@ -29,7 +29,6 @@ public:
 	enum Fetch_Operations { Fetch_Releases = 0,
 							Download_Cover = 1};
 private:
-	//Fetch_Operations _currentCall;
 	QMap<QUrl, Fetch_Operations> _currentCalls;
 
 public:
@@ -48,9 +47,6 @@ private slots:
 	void fetch();
 
 	void fetchReleases(const QByteArray &ba);
-
-//signals:
-//	void refreshView();
 };
 
 #endif // COVERFETCHER_H

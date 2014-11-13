@@ -27,11 +27,14 @@ SOURCES += coverfetcher.cpp \
     fetchdialog.cpp \
     itemview.cpp
 
-HEADERS += model/genericdao.h \
+HEADERS += interfaces/basicplugin.h \
+    interfaces/itemviewplugin.h \
+    model/albumdao.h \
+    model/artistdao.h \
+    model/genericdao.h \
     model/playlistdao.h \
     model/sqldatabase.h \
     model/trackdao.h \
-    basicplugin.h \
     cover.h \
     coverfetcher.h \
     coverwidgetitemdelegate.h \

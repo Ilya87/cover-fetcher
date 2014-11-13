@@ -74,6 +74,7 @@ void CoverFetcher::dispatchReply(QNetworkReply *reply)
 				// It's possible to have a valid release but without cover yet :(
 				if (gb->title() == _releasesGroup.value(reply->url()) && pixmap.loadFromData(ba)) {
 					QListWidget *list = gb->findChild<QListWidget*>("remoteCovers");
+					// list->clear();
 					QListWidgetItem *item = new QListWidgetItem(list);
 					item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
 					item->setCheckState(Qt::Unchecked);
@@ -103,38 +104,50 @@ void CoverFetcher::fetch()
 	_releasesGroup.clear();
 	_currentCalls.clear();
 
-	QStringList tracks = _selectedTracksModel->selectedTracks();
-	// TABLE tracks (artist varchar(255), artistAlbum varchar(255), album varchar(255),
-	//				title varchar(255), trackNumber INTEGER, discNumber INTEGER, year INTEGER,
-	//				absPath varchar(255) PRIMARY KEY ASC, path varchar(255),
-	//				coverAbsPath varchar(255), internalCover INTEGER DEFAULT 0)
+	QList<TrackDAO> tracks = _selectedTracksModel->selectedTracks();
+	SqlDatabase *db = SqlDatabase::instance();
+	//db->open();
 
-	SqlDatabase db;
-	db.open();
-
-	QString strArtistsAlbums("SELECT DISTINCT artist, album, coverAbsPath, internalCover FROM tracks WHERE absPath IN (%1)");
 	// Format and concatenate all tracks in one big string. Replaces single quote with double quote
-	QString t = tracks.replaceInStrings("'","''").join("\",\"").prepend("\"").append("\"");
-	QSqlQuery qArtistsAlbums = db.exec(strArtistsAlbums.arg(t));
+	QString l;
+	foreach (TrackDAO t, tracks) {
+		l.append("\"" + t.uri() + "\",");
+		qDebug() << "foreach" << t.artist() << t.album();
+	}
+	l = l.left(l.length() - 1);
+
+	QString strArtistsAlbums = "SELECT DISTINCT art.name, alb.name, cover, internalCover, t.artistId, t.albumId " \
+		"FROM tracks t INNER JOIN albums alb ON t.albumId = alb.id " \
+		"INNER JOIN artists art ON alb.artistId = art.id WHERE t.uri IN (" + l + ") " \
+		"ORDER BY art.name, alb.year";
+	QString artistId, albumId;
+
+	qDebug() << "query" << strArtistsAlbums;
+
+	QSqlQuery qArtistsAlbums(*db);
+	qArtistsAlbums.exec(strArtistsAlbums);
 
 	QString prevArtist = "";
-	int size = Settings::getInstance()->value("CoverFetcher/coverValueSize").toInt();
+	int size = Settings::instance()->value("CoverFetcher/coverValueSize").toInt();
 	QSize s(size, size);
 	QSize s2(size + 10, size + 10);
 	while (qArtistsAlbums.next()) {
+		qDebug() << "searching for covers";
 		QString artist = qArtistsAlbums.record().value(0).toString();
 		QString album = qArtistsAlbums.record().value(1).toString();
-		QString coverAbsPath = qArtistsAlbums.record().value(2).toString();
+		QString cover = qArtistsAlbums.record().value(2).toString();
 		bool internalCover = qArtistsAlbums.record().value(3).toBool();
+		artistId = qArtistsAlbums.record().value(4).toString();
+		albumId = qArtistsAlbums.record().value(5).toString();
 
 		// Send a new request for fetching artists only if it's a new one
 		if (artist != prevArtist) {
 			QLabel *labelArtist = new QLabel("Artist: " + artist);
 			_fetchDialog->scrollAreaWidgetContents->layout()->addWidget(labelArtist);
-			qDebug() << "fetching covers for" << artist;
-			/// XXX Behold: encode Url in a safe way
-			QNetworkRequest request(QUrl("http://musicbrainz.org/ws/2/release-group/?query=artist:%22" + artist + "%22;limit=100"));
-			request.setHeader(QNetworkRequest::UserAgentHeader, "MiamPlayer/0.6.3 ( https://github.com/MBach/Miam-Player )" );
+
+			QString tmp = QUrl::toPercentEncoding(artist);
+			QNetworkRequest request(QUrl("http://musicbrainz.org/ws/2/release-group/?query=artist:%22" + tmp + "%22;limit=100"));
+			request.setHeader(QNetworkRequest::UserAgentHeader, "MiamPlayer/0.7.0 ( https://github.com/MBach/Miam-Player )" );
 			QNetworkReply *n = _manager->get(request);
 			_currentCalls.insert(n->url(), Fetch_Releases);
 		}
@@ -145,19 +158,24 @@ void CoverFetcher::fetch()
 		// Fill the groupBox title with an Album from this Artist
 		templateCover.albumCoverGroupBox->setTitle(album);
 
-		QListWidgetItem *currentCover = new QListWidgetItem();
-		currentCover->setData(FetchDialog::LW_Album, album);
-		currentCover->setData(FetchDialog::LW_Artist, artist);
+		/// TODO: animate gif
+		/*QListWidgetItem *remoteTmpCover = new QListWidgetItem;
+		remoteTmpCover->setIcon(QIcon(":/loading"));
+		remoteTmpCover->setText();
+		templateCover.remoteCovers->addItem(remoteTmpCover);*/
 
-		if (coverAbsPath.isEmpty() && internalCover == false) {
+		QListWidgetItem *currentCover = new QListWidgetItem;
+		currentCover->setData(FetchDialog::LW_Artist, artistId);
+		currentCover->setData(FetchDialog::LW_Album, albumId);
+
+		if (cover.isEmpty() && internalCover == false) {
 			currentCover->setIcon(QIcon(":/icons/disc"));
 		} else if (internalCover) {
-			QSqlQuery oneTrack(db);
-			oneTrack.prepare("SELECT absPath FROM tracks WHERE artist = ? AND album = ? LIMIT 1");
-			oneTrack.addBindValue(artist);
-			oneTrack.addBindValue(album);
-			if (oneTrack.exec()) {
-				oneTrack.next();
+			QSqlQuery oneTrack(*db);
+			oneTrack.prepare("SELECT uri FROM tracks WHERE artistId = ? AND albumId = ? LIMIT 1");
+			oneTrack.addBindValue(artistId);
+			oneTrack.addBindValue(albumId);
+			if (oneTrack.exec() && oneTrack.next()) {
 				FileHelper fh(oneTrack.record().value(0).toString());
 				QPixmap p;
 				Cover *c = fh.extractCover();
@@ -167,7 +185,7 @@ void CoverFetcher::fetch()
 				delete c;
 			}
 		} else {
-			currentCover->setIcon(QIcon(coverAbsPath));
+			currentCover->setIcon(QIcon(cover));
 		}
 		templateCover.currentCover->addItem(currentCover);
 		_fetchDialog->scrollAreaWidgetContents->layout()->addWidget(covers);
@@ -185,7 +203,7 @@ void CoverFetcher::fetch()
 
 	QSpacerItem *vSpacer = new QSpacerItem(1, 1, QSizePolicy::Fixed, QSizePolicy::Expanding);
 	_fetchDialog->scrollAreaWidgetContents->layout()->addItem(vSpacer);
-	db.close();
+	//db->close();
 
 	_fetchDialog->show();
 	_fetchDialog->activateWindow();
@@ -227,7 +245,7 @@ void CoverFetcher::fetchReleases(const QByteArray &ba)
 				/// FIXME: find a way to get the 500px thumbnail and to automatically download the large one after
 				QUrl url("http://coverartarchive.org/release-group/" + it.value() + "/front");
 				QNetworkRequest request(url);
-				request.setHeader(QNetworkRequest::UserAgentHeader, "MiamPlayer/0.6.3 ( https://github.com/MBach/Miam-Player )" );
+				request.setHeader(QNetworkRequest::UserAgentHeader, "MiamPlayer/0.7.0 ( https://github.com/MBach/Miam-Player )" );
 				_releasesGroup.insert(url, gb->title());
 				QNetworkReply *reply = _manager->get(request);
 				_currentCalls.insert(reply->url(), Download_Cover);

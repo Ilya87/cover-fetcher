@@ -7,7 +7,7 @@
 ItemView::ItemView()
 	: QObject()
 {
-	Settings *settings = Settings::getInstance();
+	Settings *settings = Settings::instance();
 	if (!settings->value("CoverFetcher/coverValueSize").isValid()) {
 		settings->setValue("CoverFetcher/coverValueSize", 64);
 		settings->setValue("CoverFetcher/integrateCoverToFiles", true);
@@ -23,7 +23,7 @@ QWidget * ItemView::configPage()
 {
 	QWidget *widget = new QWidget();
 	_ui.setupUi(widget);
-	Settings *settings = Settings::getInstance();
+	Settings *settings = Settings::instance();
 	settings->beginGroup("CoverFetcher");
 	_ui.radioButtonIntegrateCover->setChecked(settings->value("integrateCoverToFiles", true).toBool());
 	settings->endGroup();
