@@ -42,7 +42,9 @@ HEADERS += interfaces/basicplugin.h \
     filehelper.h \
     itemview.h \
     miamcore_global.h \
-    settings.h
+    settings.h \
+    model/selectedtracksmodel.h \
+    model/yeardao.h
 
 FORMS += \
     fetchdialog.ui \

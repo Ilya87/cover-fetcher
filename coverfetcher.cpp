@@ -104,17 +104,18 @@ void CoverFetcher::fetch()
 	_releasesGroup.clear();
 	_currentCalls.clear();
 
-	QList<TrackDAO> tracks = _selectedTracksModel->selectedTracks();
+	QStringList tracks = _selectedTracksModel->selectedTracks();
 	SqlDatabase *db = SqlDatabase::instance();
 	//db->open();
 
 	// Format and concatenate all tracks in one big string. Replaces single quote with double quote
 	QString l;
-	foreach (TrackDAO t, tracks) {
-		l.append("\"" + t.uri() + "\",");
-		qDebug() << "foreach" << t.artist() << t.album();
-	}
-	l = l.left(l.length() - 1);
+	//foreach (QString t, tracks) {
+	//	l.append("\"" + t.uri() + "\",");
+	//}
+	//
+	//l = l.left(l.length() - 1);
+	l = tracks.join("\",\"").prepend("\"").append("\"");
 
 	QString strArtistsAlbums = "SELECT DISTINCT art.name, alb.name, cover, internalCover, t.artistId, t.albumId " \
 		"FROM tracks t INNER JOIN albums alb ON t.albumId = alb.id " \
@@ -179,7 +180,7 @@ void CoverFetcher::fetch()
 				FileHelper fh(oneTrack.record().value(0).toString());
 				QPixmap p;
 				Cover *c = fh.extractCover();
-				if (p.loadFromData(c->byteArray())) {
+				if (c && p.loadFromData(c->byteArray())) {
 					currentCover->setIcon(p);
 				}
 				delete c;
