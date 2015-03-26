@@ -7,13 +7,13 @@
 class CoverFetcher;
 
 /**
- * \brief       Fetch covers using MusicBrainz
+ * \brief       Fetch covers using MusicBrainz.
  * \details		This plugin is the first plugin for MiamPlayer which goes on the web to do a specific job: fetching missing covers.
  *		It is more a proof-of-concept than a real plugin even though it's working. Interfaces are intended to be generic but it's
  *		difficult to make perfect interfaces when you only have written one plugin. Moreover, fetching covers using MusicBrainz' webservice
  *		is kind hard because string matching is a complex problem. In the future, other webservices could be added without too much effort.
  * \author      Matthieu Bachelier
- * \version     0.5
+ * \version     0.6
  * \copyright   GNU General Public License v3
  */
 class ItemView : public QObject, public ItemViewPlugin
@@ -39,7 +39,7 @@ public:
 
 	inline virtual QString name() const { return "CoverFetcher"; }
 
-	inline virtual QString version() const { return "0.5"; }
+	inline virtual QString version() const { return "0.6"; }
 
 	/// From ItemViewPlugin
 	virtual QStringList classesToExtend();

@@ -10,7 +10,7 @@
 #include "miamcore_global.h"
 
 /**
- * \brief       The CoverFetcher class
+ * \brief       The CoverFetcher class can connect to the Web for downloading remote covers into your file-system.
  * \author      Matthieu Bachelier
  * \copyright   GNU General Public License v3
  */

@@ -133,9 +133,9 @@ void CoverFetcher::fetch()
 	QSize s(size, size);
 	QSize s2(size + 10, size + 10);
 	while (qArtistsAlbums.next()) {
-		qDebug() << "searching for covers";
 		QString artist = qArtistsAlbums.record().value(0).toString();
 		QString album = qArtistsAlbums.record().value(1).toString();
+		qDebug() << Q_FUNC_INFO << "searching for covers:" << artist << album;
 		QString cover = qArtistsAlbums.record().value(2).toString();
 		bool internalCover = qArtistsAlbums.record().value(3).toBool();
 		artistId = qArtistsAlbums.record().value(4).toString();

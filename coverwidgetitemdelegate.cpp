@@ -18,6 +18,7 @@ CoverWidgetItemDelegate::CoverWidgetItemDelegate(QListWidget *parent) :
 	}
 }
 
+/** Redefined to display a checkbox in top-left corner. */
 void CoverWidgetItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
 	// Draw only the border to keep the cover untouched
