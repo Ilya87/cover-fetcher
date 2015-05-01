@@ -64,7 +64,7 @@ void FetchDialog::applyChanges()
 	SqlDatabase *db = SqlDatabase::instance();
 	//db->open();
 
-	foreach (QGroupBox *gb, this->findChildren<QGroupBox*>("albumCoverGroupBox")) {
+	for (QGroupBox *gb : this->findChildren<QGroupBox*>("albumCoverGroupBox")) {
 		QListWidget *currentCoverList = gb->findChild<QListWidget*>("currentCover");
 		QString artistId = currentCoverList->item(0)->data(LW_Artist).toString();
 		QString albumId = currentCoverList->item(0)->data(LW_Album).toString();
@@ -138,7 +138,7 @@ void FetchDialog::updateCoverSize(int value)
 	settings->setValue("CoverFetcher/previewSizeSliderValue", value);
 	previewSizeValue->setText(QString(tr("%1px")).arg(size));
 	QSize iconSize(size, size);
-	foreach (QListWidget *listWidget, this->findChildren<QListWidget*>()) {
+	for (QListWidget *listWidget : this->findChildren<QListWidget*>()) {
 		listWidget->setIconSize(iconSize);
 		listWidget->setMinimumHeight(size + 10);
 		listWidget->setMaximumHeight(size + 10);

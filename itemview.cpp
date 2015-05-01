@@ -39,7 +39,7 @@ QWidget * ItemView::configPage()
 QStringList ItemView::classesToExtend()
 {
 	QStringList l = QStringList() << "LibraryTreeView" << "TagEditor";
-	foreach (QString clazz, l) {
+	for (QString clazz : l) {
 		CoverFetcher *cf = new CoverFetcher(this);
 		_coverFetchers.insert(clazz, cf);
 	}

@@ -69,7 +69,7 @@ void CoverFetcher::dispatchReply(QNetworkReply *reply)
 			// The current covert has been downloaded to a temporary location, the lists can be populated
 			QString tmpCoverPath = QDir::toNativeSeparators(path + "/" + reply->url().fileName());
 			QPixmap pixmap;
-			foreach (QGroupBox *gb, _fetchDialog->findChildren<QGroupBox*>()) {
+			for (QGroupBox *gb : _fetchDialog->findChildren<QGroupBox*>()) {
 
 				// It's possible to have a valid release but without cover yet :(
 				if (gb->title() == _releasesGroup.value(reply->url()) && pixmap.loadFromData(ba)) {
@@ -110,11 +110,6 @@ void CoverFetcher::fetch()
 
 	// Format and concatenate all tracks in one big string. Replaces single quote with double quote
 	QString l;
-	//foreach (QString t, tracks) {
-	//	l.append("\"" + t.uri() + "\",");
-	//}
-	//
-	//l = l.left(l.length() - 1);
 	l = tracks.join("\",\"").prepend("\"").append("\"");
 
 	QString strArtistsAlbums = "SELECT DISTINCT art.name, alb.name, cover, internalCover, t.artistId, t.albumId " \
@@ -194,7 +189,7 @@ void CoverFetcher::fetch()
 	}
 
 	// Initialize size with right value from slider
-	foreach (QListWidget *list, _fetchDialog->findChildren<QListWidget*>()) {
+	for (QListWidget *list : _fetchDialog->findChildren<QListWidget*>()) {
 		list->setDragDropMode(QListWidget::NoDragDrop);
 		list->setIconSize(s);
 		list->setMinimumSize(s2);
@@ -238,8 +233,7 @@ void CoverFetcher::fetchReleases(const QByteArray &ba)
 	while (it.hasNext()) {
 		it.next();
 		//qDebug() << "while:" << it.key() << it.value();
-		foreach (QGroupBox *gb, _fetchDialog->findChildren<QGroupBox*>()) {
-			//qDebug() << "foreach:" << gb->title();
+		for (QGroupBox *gb : _fetchDialog->findChildren<QGroupBox*>()) {
 			if (uiLevenshteinDistance(gb->title().toLower().toStdString(), it.key().toStdString()) < 4 ||
 					it.key().contains(gb->title().toLower()) || gb->title().toLower().contains(it.key())) {
 				//qDebug() << "uiLevenshteinDistance: get the covert art for " << gb->title() << it.key() << it.value();
