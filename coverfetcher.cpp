@@ -26,7 +26,7 @@
 using namespace std;
 
 CoverFetcher::CoverFetcher(QObject *parent) :
-	QObject(parent), _selectedTracksModel(NULL)
+	QObject(parent), _selectedTracksModel(nullptr)
 {
 	_fetchDialog = new FetchDialog;
 	_manager = new QNetworkAccessManager(this);
