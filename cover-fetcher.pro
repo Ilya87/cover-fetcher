@@ -3,19 +3,25 @@ QT          += core gui multimedia network sql widgets
 TARGET      = $$qtLibraryTarget(cover-fetcher)
 TEMPLATE    = lib
 
-MiamPlayerBuildDirectory = C:\dev\Miam-Player-build-x64\MiamPlayer
 
 DEFINES += MIAM_PLUGIN
 
 CONFIG  += dll c++11
-CONFIG(debug, debug|release) {
-    target.path = $$MiamPlayerBuildDirectory\debug\plugins
-    LIBS += -Ldebug -lMiamCore
-}
+win32 {
+    MiamPlayerBuildDirectory = C:\dev\Miam-Player-build\qt5.4.2\MiamPlayer
+    CONFIG(debug, debug|release) {
+	target.path = $$MiamPlayerBuildDirectory\debug\plugins
+	LIBS += -Ldebug -lMiamCore
+    }
 
-CONFIG(release, debug|release) {
-    target.path = $$MiamPlayerBuildDirectory\release\plugins
-    LIBS += -Lrelease -lMiamCore
+    CONFIG(release, debug|release) {
+	target.path = $$MiamPlayerBuildDirectory\release\plugins
+	LIBS += -Lrelease -lMiamCore
+    }
+}
+unix {
+    LIBS += -L$$OUT_PWD/../MiamCore/ -lmiam-core
+    target.path = /usr/bin/
 }
 
 UI_DIR = $$PWD
