@@ -3,21 +3,20 @@ QT          += core gui multimedia network sql widgets
 TARGET      = $$qtLibraryTarget(cover-fetcher)
 TEMPLATE    = lib
 
-
 DEFINES += MIAM_PLUGIN
 
 CONFIG  += dll c++11
 # TODO: how to minimize hardcoded paths?
 win32 {
-    MiamPlayerBuildDirectory = C:\dev\Miam-Player-build\qt5.4.2\MiamPlayer
+    MiamPlayerBuildDirectory = C:\dev\Miam-Player-build\qt5.5.1\MiamPlayer
     CONFIG(debug, debug|release) {
-        target.path = $$MiamPlayerBuildDirectory\debug\plugins
-        LIBS += -Ldebug -lMiamCore
+	target.path = $$MiamPlayerBuildDirectory\debug\plugins
+	LIBS += -Ldebug -lMiamCore
     }
 
     CONFIG(release, debug|release) {
-        target.path = $$MiamPlayerBuildDirectory\release\plugins
-        LIBS += -Lrelease -lMiamCore
+	target.path = $$MiamPlayerBuildDirectory\release\plugins
+	LIBS += -Lrelease -lMiamCore
     }
 }
 unix {
@@ -41,8 +40,10 @@ HEADERS += interfaces/basicplugin.h \
     model/artistdao.h \
     model/genericdao.h \
     model/playlistdao.h \
+    model/selectedtracksmodel.h \
     model/sqldatabase.h \
     model/trackdao.h \
+    model/yeardao.h \
     cover.h \
     coverfetcher.h \
     coverwidgetitemdelegate.h \
@@ -50,14 +51,11 @@ HEADERS += interfaces/basicplugin.h \
     filehelper.h \
     itemview.h \
     miamcore_global.h \
-    settings.h \
-    model/selectedtracksmodel.h \
-    model/yeardao.h
+    settings.h
 
-FORMS += \
+FORMS += config.ui \
     fetchdialog.ui \
-    templateCover.ui \
-    config.ui
+    templateCover.ui
 
 TRANSLATIONS += translations/CoverFetcher_ar.ts \
     translations/CoverFetcher_cs.ts \
@@ -74,5 +72,4 @@ TRANSLATIONS += translations/CoverFetcher_ar.ts \
     translations/CoverFetcher_vn.ts \
     translations/CoverFetcher_zh.ts
 
-RESOURCES += \
-    resources.qrc
+RESOURCES += resources.qrc

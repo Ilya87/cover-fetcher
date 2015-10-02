@@ -33,20 +33,20 @@ public:
 	virtual ~ItemView();
 
 	/// From BasicPlugin
-	virtual QWidget *configPage();
+	virtual QWidget *configPage() override;
 
-	inline virtual bool isConfigurable() const { return true; }
+	inline virtual bool isConfigurable() const override { return true; }
 
-	inline virtual QString name() const { return "CoverFetcher"; }
+	inline virtual QString name() const override { return "CoverFetcher"; }
 
-	inline virtual QString version() const { return "0.6"; }
+	inline virtual QString version() const override { return "0.6"; }
 
 	/// From ItemViewPlugin
-	virtual QStringList classesToExtend();
+	virtual QStringList classesToExtend() override;
 
-	virtual QAction * action(const QString & /*view*/, QMenu * /*parent*/);
+	virtual QAction * action(const QString & /*view*/, QMenu * /*parent*/) override;
 
-	virtual void setSelectedTracksModel(const QString &view, SelectedTracksModel *selectedTracksModel);
+	virtual void setSelectedTracksModel(const QString &view, SelectedTracksModel *selectedTracksModel) override;
 };
 
 #endif // ITEMVIEW_H
