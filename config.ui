@@ -66,7 +66,7 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
-       <widget class="QListWidget" name="listWidget">
+       <widget class="QListWidget" name="coverProviderListWidget">
         <item>
          <property name="text">
           <string notr="true">MusicBrainz</string>
@@ -75,7 +75,7 @@
           <enum>Checked</enum>
          </property>
          <property name="flags">
-          <set>ItemIsSelectable|ItemIsDragEnabled</set>
+          <set>NoItemFlags</set>
          </property>
         </item>
         <item>
@@ -86,7 +86,7 @@
           <enum>Unchecked</enum>
          </property>
          <property name="flags">
-          <set>ItemIsSelectable|ItemIsUserCheckable</set>
+          <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
          </property>
         </item>
         <item>
@@ -97,7 +97,7 @@
           <enum>Unchecked</enum>
          </property>
          <property name="flags">
-          <set>ItemIsSelectable|ItemIsUserCheckable</set>
+          <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
          </property>
         </item>
         <item>
@@ -108,7 +108,7 @@
           <enum>Unchecked</enum>
          </property>
          <property name="flags">
-          <set>ItemIsSelectable|ItemIsDragEnabled</set>
+          <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
          </property>
         </item>
        </widget>

@@ -1,5 +1,5 @@
-#ifndef ITEMVIEW_H
-#define ITEMVIEW_H
+#ifndef COVERFETCHERPLUGIN_H
+#define COVERFETCHERPLUGIN_H
 
 #include "interfaces/itemviewplugin.h"
 #include "ui_config.h"
@@ -16,21 +16,22 @@ class CoverFetcher;
  * \version     0.6
  * \copyright   GNU General Public License v3
  */
-class ItemView : public QObject, public ItemViewPlugin
+class MIAMCORE_LIBRARY CoverFetcherPlugin : public ItemViewPlugin
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID ItemViewPlugin_iid)
 	Q_INTERFACES(ItemViewPlugin)
 
 private:
+	/// XXX: it seems way too complicated to register instances in this map
 	QMap<QString, CoverFetcher*> _coverFetchers;
 
 	Ui::ConfigForm _ui;
 
 public:
-	explicit ItemView();
+	explicit CoverFetcherPlugin(QObject *parent = nullptr);
 
-	virtual ~ItemView();
+	virtual ~CoverFetcherPlugin();
 
 	/// From BasicPlugin
 	virtual QWidget *configPage() override;
@@ -49,4 +50,4 @@ public:
 	virtual void setSelectedTracksModel(const QString &view, SelectedTracksModel *selectedTracksModel) override;
 };
 
-#endif // ITEMVIEW_H
+#endif // COVERFETCHERPLUGIN_H

@@ -7,9 +7,17 @@
 #include <QItemSelectionModel>
 #include <QMenu>
 
+/**
+ * \brief		The ItemViewPlugin class
+ * \author      Matthieu Bachelier
+ * \copyright   GNU General Public License v3
+ */
 class MIAMCORE_LIBRARY ItemViewPlugin : public BasicPlugin
 {
+	Q_OBJECT
 public:
+	explicit ItemViewPlugin(QObject *parent = nullptr) : BasicPlugin(parent) {}
+
 	virtual ~ItemViewPlugin() {}
 
 	virtual QStringList classesToExtend() = 0;

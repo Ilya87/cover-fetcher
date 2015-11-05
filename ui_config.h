@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'config.ui'
 **
-** Created by: Qt User Interface Compiler version 5.5.0
+** Created by: Qt User Interface Compiler version 5.5.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -36,7 +36,7 @@ public:
     QRadioButton *radioButtonDontIntegrate;
     QGroupBox *groupBoxRemoteLocations;
     QVBoxLayout *verticalLayout_2;
-    QListWidget *listWidget;
+    QListWidget *coverProviderListWidget;
     QLabel *workInProgress;
 
     void setupUi(QWidget *ConfigForm)
@@ -83,26 +83,26 @@ public:
         groupBoxRemoteLocations->setObjectName(QStringLiteral("groupBoxRemoteLocations"));
         verticalLayout_2 = new QVBoxLayout(groupBoxRemoteLocations);
         verticalLayout_2->setObjectName(QStringLiteral("verticalLayout_2"));
-        listWidget = new QListWidget(groupBoxRemoteLocations);
-        QListWidgetItem *__qlistwidgetitem = new QListWidgetItem(listWidget);
+        coverProviderListWidget = new QListWidget(groupBoxRemoteLocations);
+        QListWidgetItem *__qlistwidgetitem = new QListWidgetItem(coverProviderListWidget);
         __qlistwidgetitem->setText(QStringLiteral("MusicBrainz"));
         __qlistwidgetitem->setCheckState(Qt::Checked);
-        __qlistwidgetitem->setFlags(Qt::ItemIsSelectable|Qt::ItemIsDragEnabled);
-        QListWidgetItem *__qlistwidgetitem1 = new QListWidgetItem(listWidget);
+        __qlistwidgetitem->setFlags(Qt::NoItemFlags);
+        QListWidgetItem *__qlistwidgetitem1 = new QListWidgetItem(coverProviderListWidget);
         __qlistwidgetitem1->setText(QStringLiteral("Discogs"));
         __qlistwidgetitem1->setCheckState(Qt::Unchecked);
-        __qlistwidgetitem1->setFlags(Qt::ItemIsSelectable|Qt::ItemIsUserCheckable);
-        QListWidgetItem *__qlistwidgetitem2 = new QListWidgetItem(listWidget);
+        __qlistwidgetitem1->setFlags(Qt::ItemIsSelectable|Qt::ItemIsUserCheckable|Qt::ItemIsEnabled);
+        QListWidgetItem *__qlistwidgetitem2 = new QListWidgetItem(coverProviderListWidget);
         __qlistwidgetitem2->setText(QStringLiteral("Amazon"));
         __qlistwidgetitem2->setCheckState(Qt::Unchecked);
-        __qlistwidgetitem2->setFlags(Qt::ItemIsSelectable|Qt::ItemIsUserCheckable);
-        QListWidgetItem *__qlistwidgetitem3 = new QListWidgetItem(listWidget);
+        __qlistwidgetitem2->setFlags(Qt::ItemIsSelectable|Qt::ItemIsUserCheckable|Qt::ItemIsEnabled);
+        QListWidgetItem *__qlistwidgetitem3 = new QListWidgetItem(coverProviderListWidget);
         __qlistwidgetitem3->setText(QStringLiteral("Last.FM"));
         __qlistwidgetitem3->setCheckState(Qt::Unchecked);
-        __qlistwidgetitem3->setFlags(Qt::ItemIsSelectable|Qt::ItemIsDragEnabled);
-        listWidget->setObjectName(QStringLiteral("listWidget"));
+        __qlistwidgetitem3->setFlags(Qt::ItemIsSelectable|Qt::ItemIsUserCheckable|Qt::ItemIsEnabled);
+        coverProviderListWidget->setObjectName(QStringLiteral("coverProviderListWidget"));
 
-        verticalLayout_2->addWidget(listWidget);
+        verticalLayout_2->addWidget(coverProviderListWidget);
 
         workInProgress = new QLabel(groupBoxRemoteLocations);
         workInProgress->setObjectName(QStringLiteral("workInProgress"));
@@ -128,9 +128,9 @@ public:
         radioButtonDontIntegrate->setText(QApplication::translate("ConfigForm", "No", 0));
         groupBoxRemoteLocations->setTitle(QApplication::translate("ConfigForm", "Remote Cover Art locations", 0));
 
-        const bool __sortingEnabled = listWidget->isSortingEnabled();
-        listWidget->setSortingEnabled(false);
-        listWidget->setSortingEnabled(__sortingEnabled);
+        const bool __sortingEnabled = coverProviderListWidget->isSortingEnabled();
+        coverProviderListWidget->setSortingEnabled(false);
+        coverProviderListWidget->setSortingEnabled(__sortingEnabled);
 
         workInProgress->setText(QApplication::translate("ConfigForm", "This plugin is under development, therefore only MusicBrainz Repository is implemented.", 0));
         Q_UNUSED(ConfigForm);

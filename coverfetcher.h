@@ -1,8 +1,10 @@
 #ifndef COVERFETCHER_H
 #define COVERFETCHER_H
 
-#include "fetchdialog.h"
 #include "model/selectedtracksmodel.h"
+#include "providers/coverartprovider.h"
+#include "fetchdialog.h"
+
 #include <QMenu>
 #include <QNetworkAccessManager>
 #include <QUrl>
@@ -22,6 +24,7 @@ private:
 	FetchDialog *_fetchDialog;
 	QNetworkAccessManager *_manager;
 	QMap<QUrl, QString> _releasesGroup;
+	QList<CoverArtProvider*> _providers;
 
 	Q_ENUMS(Fetch_Operations)
 

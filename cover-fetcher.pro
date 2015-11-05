@@ -8,7 +8,7 @@ DEFINES += MIAM_PLUGIN
 CONFIG  += dll c++11
 # TODO: how to minimize hardcoded paths?
 win32 {
-    MiamPlayerBuildDirectory = C:\dev\Miam-Player-build\qt5.5.1\MiamPlayer
+    MiamPlayerBuildDirectory = C:\Users\mbachelier\dev\Miam-Player-build\qt5.5.1\MiamPlayer
     CONFIG(debug, debug|release) {
 	target.path = $$MiamPlayerBuildDirectory\debug\plugins
 	LIBS += -Ldebug -lMiamCore
@@ -29,10 +29,11 @@ UI_DIR = $$PWD
 
 INSTALLS += target
 
-SOURCES += coverfetcher.cpp \
+SOURCES += providers/musicbrainzprovider.cpp \
+    coverfetcher.cpp \
+    coverfetcherplugin.cpp \
     coverwidgetitemdelegate.cpp \
-    fetchdialog.cpp \
-    itemview.cpp
+    fetchdialog.cpp
 
 HEADERS += interfaces/basicplugin.h \
     interfaces/itemviewplugin.h \
@@ -44,12 +45,14 @@ HEADERS += interfaces/basicplugin.h \
     model/sqldatabase.h \
     model/trackdao.h \
     model/yeardao.h \
+    providers/coverartprovider.h \
+    providers/musicbrainzprovider.h \
     cover.h \
     coverfetcher.h \
+    coverfetcherplugin.h \
     coverwidgetitemdelegate.h \
     fetchdialog.h \
     filehelper.h \
-    itemview.h \
     miamcore_global.h \
     settings.h
 

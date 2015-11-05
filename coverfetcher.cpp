@@ -17,19 +17,20 @@
 #include "filehelper.h"
 #include "cover.h"
 #include "settings.h"
+#include "providers/musicbrainzprovider.h"
 
 #include <string>
 #include <iostream>
 
 #include <QtDebug>
 
-using namespace std;
-
-CoverFetcher::CoverFetcher(QObject *parent) :
-	QObject(parent), _selectedTracksModel(nullptr)
+CoverFetcher::CoverFetcher(QObject *parent)
+	: QObject(parent)
+	, _selectedTracksModel(nullptr)
 {
 	_fetchDialog = new FetchDialog;
 	_manager = new QNetworkAccessManager(this);
+	_providers.append(new MusicBrainzProvider(this));
 	connect(_manager, &QNetworkAccessManager::finished, this, &CoverFetcher::dispatchReply);
 }
 
@@ -142,10 +143,12 @@ void CoverFetcher::fetch()
 			_fetchDialog->scrollAreaWidgetContents->layout()->addWidget(labelArtist);
 
 			QString tmp = QUrl::toPercentEncoding(artist);
-			QNetworkRequest request(QUrl("http://musicbrainz.org/ws/2/release-group/?query=artist:%22" + tmp + "%22;limit=100"));
-			request.setHeader(QNetworkRequest::UserAgentHeader, "MiamPlayer/0.7.0 ( https://github.com/MBach/Miam-Player )" );
-			QNetworkReply *n = _manager->get(request);
-			_currentCalls.insert(n->url(), Fetch_Releases);
+			for (CoverArtProvider *cp : _providers) {
+				QNetworkRequest request(cp->query(tmp));
+				request.setHeader(QNetworkRequest::UserAgentHeader, "MiamPlayer/0.8.0 ( http://www.miam-player.org/ )" );
+				QNetworkReply *n = _manager->get(request);
+				_currentCalls.insert(n->url(), Fetch_Releases);
+			}
 		}
 
 		Ui_TemplateCovers templateCover;
@@ -199,8 +202,6 @@ void CoverFetcher::fetch()
 
 	QSpacerItem *vSpacer = new QSpacerItem(1, 1, QSizePolicy::Fixed, QSizePolicy::Expanding);
 	_fetchDialog->scrollAreaWidgetContents->layout()->addItem(vSpacer);
-	//db->close();
-
 	_fetchDialog->show();
 	_fetchDialog->activateWindow();
 }
@@ -238,12 +239,15 @@ void CoverFetcher::fetchReleases(const QByteArray &ba)
 					it.key().contains(gb->title().toLower()) || gb->title().toLower().contains(it.key())) {
 				//qDebug() << "uiLevenshteinDistance: get the covert art for " << gb->title() << it.key() << it.value();
 				/// FIXME: find a way to get the 500px thumbnail and to automatically download the large one after
-				QUrl url("http://coverartarchive.org/release-group/" + it.value() + "/front");
-				QNetworkRequest request(url);
-				request.setHeader(QNetworkRequest::UserAgentHeader, "MiamPlayer/0.7.0 ( https://github.com/MBach/Miam-Player )" );
-				_releasesGroup.insert(url, gb->title());
-				QNetworkReply *reply = _manager->get(request);
-				_currentCalls.insert(reply->url(), Download_Cover);
+				for (CoverArtProvider *provider : _providers) {
+					QUrl url("http://coverartarchive.org/release-group/" + it.value() + "/front");
+					provider->album(it.value());
+					QNetworkRequest request(url);
+					request.setHeader(QNetworkRequest::UserAgentHeader, "MiamPlayer/0.8.0 ( http://www.miam-player.org/ )" );
+					_releasesGroup.insert(url, gb->title());
+					QNetworkReply *reply = _manager->get(request);
+					_currentCalls.insert(reply->url(), Download_Cover);
+				}
 				//it.remove();
 				break;
 			}
@@ -266,12 +270,12 @@ size_t CoverFetcher::uiLevenshteinDistance(const std::string &s1, const std::str
 	for (size_t k = 0; k <= n; k++) costs[k] = k;
 
 	size_t i = 0;
-	for (string::const_iterator it1 = s1.begin(); it1 != s1.end(); ++it1, ++i) {
+	for (std::string::const_iterator it1 = s1.begin(); it1 != s1.end(); ++it1, ++i) {
 		costs[0] = i+1;
 		size_t corner = i;
 
 		size_t j = 0;
-		for (string::const_iterator it2 = s2.begin(); it2 != s2.end(); ++it2, ++j) {
+		for (std::string::const_iterator it2 = s2.begin(); it2 != s2.end(); ++it2, ++j) {
 			size_t upper = costs[j+1];
 			if (*it1 == *it2) {
 				costs[j+1] = corner;
@@ -285,6 +289,5 @@ size_t CoverFetcher::uiLevenshteinDistance(const std::string &s1, const std::str
 
 	size_t result = costs[n];
 	delete [] costs;
-
 	return result;
 }
