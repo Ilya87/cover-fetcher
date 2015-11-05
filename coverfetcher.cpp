@@ -27,9 +27,9 @@
 CoverFetcher::CoverFetcher(QObject *parent)
 	: QObject(parent)
 	, _selectedTracksModel(nullptr)
+	, _fetchDialog(new FetchDialog)
+	, _manager(new QNetworkAccessManager(this))
 {
-	_fetchDialog = new FetchDialog;
-	_manager = new QNetworkAccessManager(this);
 	_providers.append(new MusicBrainzProvider(this));
 	connect(_manager, &QNetworkAccessManager::finished, this, &CoverFetcher::dispatchReply);
 }
@@ -50,6 +50,46 @@ QAction * CoverFetcher::action(QMenu *parentMenu)
 	return action;
 }
 
+void CoverFetcher::downloadCover(QByteArray ba, QNetworkReply *reply, QString path)
+{
+	// In case we don't get the picture at the first attempt, try again
+	QVariant redirectionTarget = reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
+	if (redirectionTarget.isNull()) {
+
+		// The current covert has been downloaded to a temporary location, the lists can be populated
+		QString tmpCoverPath = QDir::toNativeSeparators(path + "/" + reply->url().fileName());
+		qDebug() << Q_FUNC_INFO << "tmpCoverPath" << tmpCoverPath;
+		QPixmap pixmap;
+		for (QGroupBox *gb : _fetchDialog->findChildren<QGroupBox*>()) {
+
+			// It's possible to have a valid release but without cover yet :(
+			if (gb->title() == _releasesGroup.value(reply->url()) && pixmap.loadFromData(ba)) {
+				QStackedWidget *list = gb->findChild<QStackedWidget*>("remoteCovers");
+				// list->clear();
+				//QListWidgetItem *item = new QListWidgetItem(list);
+				//item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+				//item->setCheckState(Qt::Unchecked);
+				//item->setIcon(QIcon(pixmap));
+				if (pixmap.save(tmpCoverPath)) {
+					QLabel *l = new QLabel(list);
+					l->setPixmap(pixmap);
+					list->addWidget(l);
+					// Kind of ugly way to pass data from one class to another, but it does the job (at least an enum was created)
+					//item->setData(FetchDialog::LW_TmpCoverPath, tmpCoverPath);
+				}
+				break;
+			}
+		}
+	} else {
+		QUrl newUrl = reply->url().resolved(redirectionTarget.toUrl());
+		QString release = _releasesGroup.value(reply->url());
+		_releasesGroup.remove(reply->url());
+		_releasesGroup.insert(newUrl, release);
+		QNetworkReply *r = _manager->get(QNetworkRequest(newUrl));
+		_currentCalls.insert(r->url(), FO_DownloadCover);
+	}
+}
+
 void CoverFetcher::dispatchReply(QNetworkReply *reply)
 {
 	//qDebug() << reply->isFinished() << reply->url();
@@ -59,44 +99,12 @@ void CoverFetcher::dispatchReply(QNetworkReply *reply)
 	// Dispatch request
 	Fetch_Operations op = _currentCalls.value(reply->url());
 	switch (op) {
-	case Fetch_Releases:
+	case FO_GetReleases:
 		this->fetchReleases(ba);
 		break;
-	case Download_Cover: {
-		// In case we don't get the picture at the first attempt, try again
-		QVariant redirectionTarget = reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
-		if (redirectionTarget.isNull()) {
-
-			// The current covert has been downloaded to a temporary location, the lists can be populated
-			QString tmpCoverPath = QDir::toNativeSeparators(path + "/" + reply->url().fileName());
-			QPixmap pixmap;
-			for (QGroupBox *gb : _fetchDialog->findChildren<QGroupBox*>()) {
-
-				// It's possible to have a valid release but without cover yet :(
-				if (gb->title() == _releasesGroup.value(reply->url()) && pixmap.loadFromData(ba)) {
-					QListWidget *list = gb->findChild<QListWidget*>("remoteCovers");
-					// list->clear();
-					QListWidgetItem *item = new QListWidgetItem(list);
-					item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-					item->setCheckState(Qt::Unchecked);
-					item->setIcon(QIcon(pixmap));
-					if (pixmap.save(tmpCoverPath)) {
-						// Kind of ugly way to pass data from one class to another, but it does the job (at least an enum was created)
-						item->setData(FetchDialog::LW_TmpCoverPath, tmpCoverPath);
-					}
-					break;
-				}
-			}
-		} else {
-			QUrl newUrl = reply->url().resolved(redirectionTarget.toUrl());
-			QString release = _releasesGroup.value(reply->url());
-			_releasesGroup.remove(reply->url());
-			_releasesGroup.insert(newUrl, release);
-			QNetworkReply *r = _manager->get(QNetworkRequest(newUrl));
-			_currentCalls.insert(r->url(), Download_Cover);
-		}
+	case FO_DownloadCover:
+		this->downloadCover(ba, reply, path);
 		break;
-	}
 	}
 }
 
@@ -147,7 +155,7 @@ void CoverFetcher::fetch()
 				QNetworkRequest request(cp->query(tmp));
 				request.setHeader(QNetworkRequest::UserAgentHeader, "MiamPlayer/0.8.0 ( http://www.miam-player.org/ )" );
 				QNetworkReply *n = _manager->get(request);
-				_currentCalls.insert(n->url(), Fetch_Releases);
+				_currentCalls.insert(n->url(), FO_GetReleases);
 			}
 		}
 
@@ -246,7 +254,7 @@ void CoverFetcher::fetchReleases(const QByteArray &ba)
 					request.setHeader(QNetworkRequest::UserAgentHeader, "MiamPlayer/0.8.0 ( http://www.miam-player.org/ )" );
 					_releasesGroup.insert(url, gb->title());
 					QNetworkReply *reply = _manager->get(request);
-					_currentCalls.insert(reply->url(), Download_Cover);
+					_currentCalls.insert(reply->url(), FO_DownloadCover);
 				}
 				//it.remove();
 				break;
@@ -257,6 +265,7 @@ void CoverFetcher::fetchReleases(const QByteArray &ba)
 
 // Compute Levenshtein Distance
 // Martin Ettl, 2012-10-05
+/** Levenshtein distance is a string metric for measuring the difference between two sequences. */
 size_t CoverFetcher::uiLevenshteinDistance(const std::string &s1, const std::string &s2)
 {
 	const size_t m(s1.size());

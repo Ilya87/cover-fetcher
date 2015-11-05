@@ -29,8 +29,12 @@ private:
 	Q_ENUMS(Fetch_Operations)
 
 public:
-	enum Fetch_Operations { Fetch_Releases = 0,
-							Download_Cover = 1};
+	enum Fetch_Operations : int
+	{
+		FO_GetReleases		= 0,
+		FO_DownloadCover	= 1
+	};
+
 private:
 	QMap<QUrl, Fetch_Operations> _currentCalls;
 
@@ -42,7 +46,10 @@ public:
 	QAction * action(QMenu *parentMenu);
 
 private:
+	/** Levenshtein distance is a string metric for measuring the difference between two sequences. */
 	static size_t uiLevenshteinDistance(const std::string &s1, const std::string &s2);
+
+	void downloadCover(QByteArray ba, QNetworkReply *reply, QString path);
 
 private slots:
 	void dispatchReply(QNetworkReply *reply);
