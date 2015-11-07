@@ -17,9 +17,7 @@
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QListWidget>
-#include <QtWidgets/QPushButton>
 #include <QtWidgets/QSpacerItem>
-#include <QtWidgets/QStackedWidget>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
 
@@ -37,11 +35,7 @@ public:
     QListWidget *currentCover;
     QGroupBox *remoteCoversGroupBox;
     QVBoxLayout *verticalLayout;
-    QStackedWidget *remoteCovers;
-    QHBoxLayout *horizontalLayout_5;
-    QPushButton *previousCoverButton;
-    QSpacerItem *rightSpacer_2;
-    QPushButton *nextCoverButton;
+    QListWidget *remoteCovers;
     QSpacerItem *rightSpacer;
 
     void setupUi(QWidget *TemplateCovers)
@@ -102,29 +96,24 @@ public:
         remoteCoversGroupBox->setObjectName(QStringLiteral("remoteCoversGroupBox"));
         verticalLayout = new QVBoxLayout(remoteCoversGroupBox);
         verticalLayout->setObjectName(QStringLiteral("verticalLayout"));
-        remoteCovers = new QStackedWidget(remoteCoversGroupBox);
+        remoteCovers = new QListWidget(remoteCoversGroupBox);
         remoteCovers->setObjectName(QStringLiteral("remoteCovers"));
+        sizePolicy1.setHeightForWidth(remoteCovers->sizePolicy().hasHeightForWidth());
+        remoteCovers->setSizePolicy(sizePolicy1);
+        remoteCovers->setMinimumSize(QSize(32, 32));
+        remoteCovers->setMaximumSize(QSize(512, 512));
+        remoteCovers->setFocusPolicy(Qt::ClickFocus);
+        remoteCovers->setContextMenuPolicy(Qt::NoContextMenu);
+        remoteCovers->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        remoteCovers->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        remoteCovers->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
+        remoteCovers->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        remoteCovers->setProperty("showDropIndicator", QVariant(false));
+        remoteCovers->setDragDropMode(QAbstractItemView::NoDragDrop);
+        remoteCovers->setMovement(QListView::Static);
+        remoteCovers->setViewMode(QListView::IconMode);
 
         verticalLayout->addWidget(remoteCovers);
-
-        horizontalLayout_5 = new QHBoxLayout();
-        horizontalLayout_5->setObjectName(QStringLiteral("horizontalLayout_5"));
-        previousCoverButton = new QPushButton(remoteCoversGroupBox);
-        previousCoverButton->setObjectName(QStringLiteral("previousCoverButton"));
-
-        horizontalLayout_5->addWidget(previousCoverButton);
-
-        rightSpacer_2 = new QSpacerItem(20, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
-
-        horizontalLayout_5->addItem(rightSpacer_2);
-
-        nextCoverButton = new QPushButton(remoteCoversGroupBox);
-        nextCoverButton->setObjectName(QStringLiteral("nextCoverButton"));
-
-        horizontalLayout_5->addWidget(nextCoverButton);
-
-
-        verticalLayout->addLayout(horizontalLayout_5);
 
 
         horizontalLayout_2->addWidget(remoteCoversGroupBox);
@@ -146,8 +135,6 @@ public:
     {
         currentCoverGroupBox->setTitle(QApplication::translate("TemplateCovers", "Cover in your files", 0));
         remoteCoversGroupBox->setTitle(QApplication::translate("TemplateCovers", "Remote cover", 0));
-        previousCoverButton->setText(QApplication::translate("TemplateCovers", "<", 0));
-        nextCoverButton->setText(QApplication::translate("TemplateCovers", ">", 0));
         Q_UNUSED(TemplateCovers);
     } // retranslateUi
 

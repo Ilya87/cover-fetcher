@@ -12,7 +12,6 @@
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QSqlRecord>
-#include <QStackedWidget>
 
 #include <QtDebug>
 
@@ -27,7 +26,7 @@ FetchDialog::FetchDialog(QWidget *parent) :
 	Settings *settings = Settings::instance();
 
 	// Setting the value will trigger valueChanged connected upthere on purpose
-	previewSizeSlider->setValue(settings->value("CoverFetcher/previewSizeSliderValue", 1).toInt());
+	previewSizeSlider->setValue(settings->value("CoverFetcher/previewSizeSliderValue", 0).toInt());
 	restoreGeometry(settings->value("CoverFetcher/geometry").toByteArray());
 
 	// Filter on apply button only
@@ -71,47 +70,42 @@ void FetchDialog::applyChanges()
 		QString albumId = currentCoverList->item(0)->data(LW_Album).toString();
 
 		// Right now, there's only one cover per album (one remote location)! So one can check at most 1 item...
-		QStackedWidget *remoteCoverList = gb->findChild<QStackedWidget*>("remoteCovers");
+		QListWidget *remoteCoverList = gb->findChild<QListWidget*>("remoteCovers");
 		for (int i = 0; i < remoteCoverList->count(); i++) {
-			QWidget *w = remoteCoverList->widget(i);
-			if (w) {
-				QLabel *label = qobject_cast<QLabel*>(w);
-				label->pixmap();
 
-				// Convenient way to get data
-				/*Cover c(w->data(LW_TmpCoverPath).toString());
-				if (w->checkState() == Qt::Checked) {
+			// Convenient way to get data
+			QListWidgetItem *item = remoteCoverList->item(i);
+			Cover c(item->data(LW_TmpCoverPath).toString());
+			if (item->checkState() == Qt::Checked) {
 
-					// Create inner cover for each file
-					if (integrateCoverToFiles) {
+				// Create inner cover for each file
+				if (integrateCoverToFiles) {
 
-						// Before creating the cover, we have to know which file to process
-						QSqlQuery findTracks(*db);
-						findTracks.prepare("SELECT uri FROM tracks WHERE artistId = ? AND albumId = ?");
-						findTracks.addBindValue(artistId);
-						findTracks.addBindValue(albumId);
-						bool b = findTracks.exec();
-						qDebug() << "selecting tracks to update" << b << artistId << albumId;
-						while (findTracks.next()) {
-							FileHelper fh(findTracks.record().value(0).toString());
-							fh.setCover(&c);
-							b = fh.save();
-							qDebug() << "writing cover into file" << b << fh.title();
-						}
-
-						QSqlQuery updateTracks(*db);
-						updateTracks.prepare("UPDATE tracks SET internalCover = 1 WHERE artistId = ? AND albumId = ?");
-						updateTracks.addBindValue(artistId);
-						updateTracks.addBindValue(albumId);
-						b = updateTracks.exec();
-						qDebug() << "updating tracks" << b;
+					// Before creating the cover, we have to know which file to process
+					QSqlQuery findTracks(*db);
+					findTracks.prepare("SELECT uri FROM tracks WHERE artistId = ? AND albumId = ?");
+					findTracks.addBindValue(artistId);
+					findTracks.addBindValue(albumId);
+					bool b = findTracks.exec();
+					qDebug() << "selecting tracks to update" << b << artistId << albumId;
+					while (findTracks.next()) {
+						FileHelper fh(findTracks.record().value(0).toString());
+						fh.setCover(&c);
+						b = fh.save();
+						qDebug() << "writing cover into file" << b << fh.title();
 					}
-					break;
-				}*/
+
+					QSqlQuery updateTracks(*db);
+					updateTracks.prepare("UPDATE tracks SET internalCover = 1 WHERE artistId = ? AND albumId = ?");
+					updateTracks.addBindValue(artistId);
+					updateTracks.addBindValue(albumId);
+					b = updateTracks.exec();
+					qDebug() << "updating tracks" << b;
+				}
+				break;
 			}
 		}
 	}
-	//db->close();
 	this->close();
 	emit refreshView();
 }
@@ -121,19 +115,12 @@ void FetchDialog::updateCoverSize(int value)
 	int size;
 	switch (value) {
 	case 0:
-		size = 32;
-		break;
-	default:
-	case 1:
-		size = 64;
-		break;
-	case 2:
 		size = 100;
 		break;
-	case 3:
+	case 1:
 		size = 250;
 		break;
-	case 4:
+	case 2:
 		size = 500;
 		break;
 	}

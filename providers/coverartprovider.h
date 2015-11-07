@@ -17,8 +17,6 @@ class MIAMCORE_LIBRARY CoverArtProvider : public QObject
 public:
 	explicit CoverArtProvider(QObject *parent = nullptr) : QObject(parent) {}
 
-	virtual ~CoverArtProvider() {}
-
 	virtual QUrl query(const QString &) = 0;
 
 	virtual QUrl album(const QString &) = 0;

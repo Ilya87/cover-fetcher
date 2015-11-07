@@ -32,11 +32,14 @@ public:
 	enum Fetch_Operations : int
 	{
 		FO_GetReleases		= 0,
-		FO_DownloadCover	= 1
+		FO_DownloadCover	= 1,
+		FO_Search			= 2
 	};
 
 private:
 	QMap<QUrl, Fetch_Operations> _currentCalls;
+
+	QSet<QNetworkReply*> _currentCalls2;
 
 public:
 	explicit CoverFetcher(QObject *parent);
@@ -49,14 +52,12 @@ private:
 	/** Levenshtein distance is a string metric for measuring the difference between two sequences. */
 	static size_t uiLevenshteinDistance(const std::string &s1, const std::string &s2);
 
-	void downloadCover(QByteArray ba, QNetworkReply *reply, QString path);
+	void downloadCover(QByteArray ba, QNetworkReply *reply);
 
 private slots:
 	void dispatchReply(QNetworkReply *reply);
 
 	void fetch();
-
-	void fetchReleases(const QByteArray &ba);
 };
 
 #endif // COVERFETCHER_H

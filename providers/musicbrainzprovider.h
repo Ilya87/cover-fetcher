@@ -14,12 +14,12 @@ class MIAMCORE_LIBRARY MusicBrainzProvider : public CoverArtProvider
 public:
 	explicit MusicBrainzProvider(QObject *parent = nullptr);
 
-	virtual ~MusicBrainzProvider();
+	virtual QUrl query(const QString &artistId) override;
 
-	virtual QUrl query(const QString &expr) override;
+	virtual QUrl album(const QString &albumId) override;
 
-	virtual QUrl album(const QString &expr) override;
-
+private:
+	void fetchReleases(const QByteArray &ba);
 };
 
 #endif // MUSICBRAINZPROVIDER_H

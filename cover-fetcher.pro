@@ -33,7 +33,9 @@ SOURCES += providers/musicbrainzprovider.cpp \
     coverfetcher.cpp \
     coverfetcherplugin.cpp \
     coverwidgetitemdelegate.cpp \
-    fetchdialog.cpp
+    fetchdialog.cpp \
+    providers/lastfmprovider.cpp \
+    providers/amazonprovider.cpp
 
 HEADERS += interfaces/basicplugin.h \
     interfaces/itemviewplugin.h \
@@ -54,7 +56,9 @@ HEADERS += interfaces/basicplugin.h \
     fetchdialog.h \
     filehelper.h \
     miamcore_global.h \
-    settings.h
+    settings.h \
+    providers/lastfmprovider.h \
+    providers/amazonprovider.h
 
 FORMS += config.ui \
     fetchdialog.ui \

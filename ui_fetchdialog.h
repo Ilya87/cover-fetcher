@@ -64,11 +64,12 @@ public:
         previewSizeSlider->setObjectName(QStringLiteral("previewSizeSlider"));
         previewSizeSlider->setMinimumSize(QSize(200, 0));
         previewSizeSlider->setMaximumSize(QSize(400, 16777215));
-        previewSizeSlider->setMaximum(4);
+        previewSizeSlider->setMaximum(2);
         previewSizeSlider->setPageStep(1);
-        previewSizeSlider->setSliderPosition(1);
+        previewSizeSlider->setValue(0);
+        previewSizeSlider->setSliderPosition(0);
         previewSizeSlider->setOrientation(Qt::Horizontal);
-        previewSizeSlider->setTickPosition(QSlider::TicksBelow);
+        previewSizeSlider->setTickPosition(QSlider::TicksBothSides);
 
         horizontalLayout->addWidget(previewSizeSlider);
 
@@ -93,7 +94,7 @@ public:
         scrollArea->setWidgetResizable(true);
         scrollAreaWidgetContents = new QWidget();
         scrollAreaWidgetContents->setObjectName(QStringLiteral("scrollAreaWidgetContents"));
-        scrollAreaWidgetContents->setGeometry(QRect(0, 0, 620, 181));
+        scrollAreaWidgetContents->setGeometry(QRect(0, 0, 622, 184));
         verticalLayout_3 = new QVBoxLayout(scrollAreaWidgetContents);
         verticalLayout_3->setSpacing(0);
         verticalLayout_3->setObjectName(QStringLiteral("verticalLayout_3"));
@@ -130,7 +131,7 @@ public:
     {
         FetchDialog->setWindowTitle(QApplication::translate("FetchDialog", "Fetch Covers", 0));
         previewSizeLabel->setText(QApplication::translate("FetchDialog", "Preview size:", 0));
-        previewSizeValue->setText(QApplication::translate("FetchDialog", "64px", 0));
+        previewSizeValue->setText(QApplication::translate("FetchDialog", "100px", 0));
     } // retranslateUi
 
 };

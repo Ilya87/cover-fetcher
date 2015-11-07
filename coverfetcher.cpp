@@ -10,13 +10,14 @@
 #include <QStandardItemModel>
 #include <QStandardPaths>
 #include <QUrl>
-#include <QXmlStreamReader>
 
 #include "ui_templateCover.h"
 #include "coverwidgetitemdelegate.h"
 #include "filehelper.h"
 #include "cover.h"
 #include "settings.h"
+#include "providers/amazonprovider.h"
+#include "providers/lastfmprovider.h"
 #include "providers/musicbrainzprovider.h"
 
 #include <string>
@@ -30,7 +31,9 @@ CoverFetcher::CoverFetcher(QObject *parent)
 	, _fetchDialog(new FetchDialog)
 	, _manager(new QNetworkAccessManager(this))
 {
-	_providers.append(new MusicBrainzProvider(this));
+	//_providers.append(new MusicBrainzProvider(this));
+	_providers.append(new AmazonProvider(this));
+	//_providers.append(new LastFMProvider(this));
 	connect(_manager, &QNetworkAccessManager::finished, this, &CoverFetcher::dispatchReply);
 }
 
@@ -50,8 +53,10 @@ QAction * CoverFetcher::action(QMenu *parentMenu)
 	return action;
 }
 
-void CoverFetcher::downloadCover(QByteArray ba, QNetworkReply *reply, QString path)
+void CoverFetcher::downloadCover(QByteArray ba, QNetworkReply *reply)
 {
+	QString path = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+
 	// In case we don't get the picture at the first attempt, try again
 	QVariant redirectionTarget = reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
 	if (redirectionTarget.isNull()) {
@@ -64,23 +69,21 @@ void CoverFetcher::downloadCover(QByteArray ba, QNetworkReply *reply, QString pa
 
 			// It's possible to have a valid release but without cover yet :(
 			if (gb->title() == _releasesGroup.value(reply->url()) && pixmap.loadFromData(ba)) {
-				QStackedWidget *list = gb->findChild<QStackedWidget*>("remoteCovers");
+				QListWidget *list = gb->findChild<QListWidget*>("remoteCovers");
 				// list->clear();
-				//QListWidgetItem *item = new QListWidgetItem(list);
-				//item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-				//item->setCheckState(Qt::Unchecked);
-				//item->setIcon(QIcon(pixmap));
+				QListWidgetItem *item = new QListWidgetItem(list);
+				item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+				item->setCheckState(Qt::Unchecked);
+				item->setIcon(QIcon(pixmap));
 				if (pixmap.save(tmpCoverPath)) {
-					QLabel *l = new QLabel(list);
-					l->setPixmap(pixmap);
-					list->addWidget(l);
 					// Kind of ugly way to pass data from one class to another, but it does the job (at least an enum was created)
-					//item->setData(FetchDialog::LW_TmpCoverPath, tmpCoverPath);
+					item->setData(FetchDialog::LW_TmpCoverPath, tmpCoverPath);
 				}
 				break;
 			}
 		}
 	} else {
+		qDebug() << "A redirection has been detected for" << redirectionTarget.toUrl();
 		QUrl newUrl = reply->url().resolved(redirectionTarget.toUrl());
 		QString release = _releasesGroup.value(reply->url());
 		_releasesGroup.remove(reply->url());
@@ -92,18 +95,36 @@ void CoverFetcher::downloadCover(QByteArray ba, QNetworkReply *reply, QString pa
 
 void CoverFetcher::dispatchReply(QNetworkReply *reply)
 {
-	//qDebug() << reply->isFinished() << reply->url();
-	QByteArray ba = reply->readAll();
-	QString path = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
 
 	// Dispatch request
-	Fetch_Operations op = _currentCalls.value(reply->url());
-	switch (op) {
+	/*if (_currentCalls.contains(reply->url())) {
+		Fetch_Operations op = _currentCalls.value(reply->url());
+		_currentCalls.remove(reply->url());
+		switch (op) {
+		case FO_GetReleases:
+			qDebug() << Q_FUNC_INFO << "Current fetch operation GetReleases" << reply->url();
+			this->fetchReleases(ba);
+			break;
+		case FO_DownloadCover:
+			qDebug() << Q_FUNC_INFO << "Current fetch operation DownloadCover" << reply->url();
+			this->downloadCover(ba, reply);
+			break;
+		}
+	}*/
+	Fetch_Operations fo = (Fetch_Operations)reply->property("requestType").toInt();
+	switch (fo) {
 	case FO_GetReleases:
-		this->fetchReleases(ba);
+		qDebug() << Q_FUNC_INFO << "Current fetch operation GetReleases" << reply->url();
 		break;
 	case FO_DownloadCover:
-		this->downloadCover(ba, reply, path);
+		qDebug() << Q_FUNC_INFO << "Current fetch operation DownloadCover" << reply->url();
+		break;
+	case FO_Search: {
+		qDebug() << Q_FUNC_INFO << "Current fetch operation Search" << reply->url();
+		QByteArray ba = reply->readAll();
+	}
+	break;
+	default:
 		break;
 	}
 }
@@ -118,6 +139,7 @@ void CoverFetcher::fetch()
 	//db->open();
 
 	// Format and concatenate all tracks in one big string. Replaces single quote with double quote
+	/// FIXME
 	QString l;
 	l = tracks.join("\",\"").prepend("\"").append("\"");
 
@@ -126,8 +148,6 @@ void CoverFetcher::fetch()
 		"INNER JOIN artists art ON alb.artistId = art.id WHERE t.uri IN (" + l + ") " \
 		"ORDER BY art.name, alb.year";
 	QString artistId, albumId;
-
-	qDebug() << "query" << strArtistsAlbums;
 
 	QSqlQuery qArtistsAlbums(*db);
 	qArtistsAlbums.exec(strArtistsAlbums);
@@ -150,12 +170,16 @@ void CoverFetcher::fetch()
 			QLabel *labelArtist = new QLabel("Artist: " + artist);
 			_fetchDialog->scrollAreaWidgetContents->layout()->addWidget(labelArtist);
 
-			QString tmp = QUrl::toPercentEncoding(artist);
+			//QString tmp = QUrl::toPercentEncoding(artist);
 			for (CoverArtProvider *cp : _providers) {
-				QNetworkRequest request(cp->query(tmp));
+				QUrl url = cp->query(artist + " " + album);
+				QNetworkRequest request(url);
+				request.setAttribute(QNetworkRequest::User, FO_Search);
 				request.setHeader(QNetworkRequest::UserAgentHeader, "MiamPlayer/0.8.0 ( http://www.miam-player.org/ )" );
 				QNetworkReply *n = _manager->get(request);
-				_currentCalls.insert(n->url(), FO_GetReleases);
+				n->setProperty("requestType", FO_Search);
+				//_currentCalls.insert(n->url(), FO_Search);
+				_currentCalls2.insert(n);
 			}
 		}
 
@@ -214,54 +238,6 @@ void CoverFetcher::fetch()
 	_fetchDialog->activateWindow();
 }
 
-void CoverFetcher::fetchReleases(const QByteArray &ba)
-{
-	QXmlStreamReader xml(ba);
-
-	// Album Text -> Album ID
-	QMap<QString, QString> map;
-	while(!xml.atEnd() && !xml.hasError()) {
-
-		QXmlStreamReader::TokenType token = xml.readNext();
-
-		// Parse start elements
-		if (token == QXmlStreamReader::StartElement) {
-			if (xml.name() == "release-group") {
-				if (xml.attributes().hasAttribute("id")) {
-					QStringRef sr = xml.attributes().value("id");
-					if (xml.readNextStartElement() && xml.name() == "title") {
-						map.insert(xml.readElementText().toLower(), sr.toString());
-					}
-				}
-			}
-		}
-	}
-
-	QMapIterator<QString, QString> it(map);
-	/// Complexity: should be improved!
-	while (it.hasNext()) {
-		it.next();
-		//qDebug() << "while:" << it.key() << it.value();
-		for (QGroupBox *gb : _fetchDialog->findChildren<QGroupBox*>()) {
-			if (uiLevenshteinDistance(gb->title().toLower().toStdString(), it.key().toStdString()) < 4 ||
-					it.key().contains(gb->title().toLower()) || gb->title().toLower().contains(it.key())) {
-				//qDebug() << "uiLevenshteinDistance: get the covert art for " << gb->title() << it.key() << it.value();
-				/// FIXME: find a way to get the 500px thumbnail and to automatically download the large one after
-				for (CoverArtProvider *provider : _providers) {
-					QUrl url("http://coverartarchive.org/release-group/" + it.value() + "/front");
-					provider->album(it.value());
-					QNetworkRequest request(url);
-					request.setHeader(QNetworkRequest::UserAgentHeader, "MiamPlayer/0.8.0 ( http://www.miam-player.org/ )" );
-					_releasesGroup.insert(url, gb->title());
-					QNetworkReply *reply = _manager->get(request);
-					_currentCalls.insert(reply->url(), FO_DownloadCover);
-				}
-				//it.remove();
-				break;
-			}
-		}
-	}
-}
 
 // Compute Levenshtein Distance
 // Martin Ettl, 2012-10-05

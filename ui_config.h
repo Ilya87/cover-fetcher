@@ -87,7 +87,7 @@ public:
         QListWidgetItem *__qlistwidgetitem = new QListWidgetItem(coverProviderListWidget);
         __qlistwidgetitem->setText(QStringLiteral("MusicBrainz"));
         __qlistwidgetitem->setCheckState(Qt::Checked);
-        __qlistwidgetitem->setFlags(Qt::NoItemFlags);
+        __qlistwidgetitem->setFlags(Qt::ItemIsSelectable|Qt::ItemIsUserCheckable|Qt::ItemIsEnabled);
         QListWidgetItem *__qlistwidgetitem1 = new QListWidgetItem(coverProviderListWidget);
         __qlistwidgetitem1->setText(QStringLiteral("Discogs"));
         __qlistwidgetitem1->setCheckState(Qt::Unchecked);

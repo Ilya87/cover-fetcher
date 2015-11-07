@@ -75,7 +75,7 @@
           <enum>Checked</enum>
          </property>
          <property name="flags">
-          <set>NoItemFlags</set>
+          <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
          </property>
         </item>
         <item>

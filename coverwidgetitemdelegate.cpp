@@ -25,7 +25,7 @@ void CoverWidgetItemDelegate::paint(QPainter *painter, const QStyleOptionViewIte
 	if (option.state.testFlag(QStyle::State_Selected)) {
 		painter->save();
 		painter->setPen(option.palette.highlight().color());
-		painter->drawRect(option.rect);
+		painter->drawRect(option.rect.adjusted(0, 0, -1, -1));
 		painter->restore();
 	}
 
