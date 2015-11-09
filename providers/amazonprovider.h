@@ -15,14 +15,17 @@ private:
 	static const char* associateTag;
 
 public:
-	explicit AmazonProvider(QObject *parent = nullptr);
+	explicit AmazonProvider(QNetworkAccessManager *parent);
 
-	virtual QUrl query(const QString &expr) override;
+	virtual QUrl query(const QString &artist, const QString &album) override;
 
 	virtual QUrl album(const QString &expr) override;
 
 private:
 	static QByteArray hmac(const QByteArray &key, const QByteArray &data);
+
+public slots:
+	virtual void dispatchReply(QNetworkReply *reply) override;
 };
 
 #endif // AMAZONPROVIDER_H

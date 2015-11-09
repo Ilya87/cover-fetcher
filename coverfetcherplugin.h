@@ -13,7 +13,7 @@ class CoverFetcher;
  *		difficult to make perfect interfaces when you only have written one plugin. Moreover, fetching covers using MusicBrainz' webservice
  *		is kind hard because string matching is a complex problem. In the future, other webservices could be added without too much effort.
  * \author      Matthieu Bachelier
- * \version     0.6
+ * \version     0.7
  * \copyright   GNU General Public License v3
  */
 class MIAMCORE_LIBRARY CoverFetcherPlugin : public ItemViewPlugin
@@ -23,8 +23,9 @@ class MIAMCORE_LIBRARY CoverFetcherPlugin : public ItemViewPlugin
 	Q_INTERFACES(ItemViewPlugin)
 
 private:
-	/// XXX: it seems way too complicated to register instances in this map
-	QMap<QString, CoverFetcher*> _coverFetchers;
+	CoverFetcher *_coverFetcher;
+
+	QMap<QString, SelectedTracksModel*> _viewModels;
 
 	Ui::ConfigForm _ui;
 
@@ -40,7 +41,7 @@ public:
 
 	inline virtual QString name() const override { return "CoverFetcher"; }
 
-	inline virtual QString version() const override { return "0.6"; }
+	inline virtual QString version() const override { return "0.7"; }
 
 	/// From ItemViewPlugin
 	virtual QStringList classesToExtend() override;

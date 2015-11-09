@@ -23,41 +23,14 @@ private:
 	SelectedTracksModel *_selectedTracksModel;
 	FetchDialog *_fetchDialog;
 	QNetworkAccessManager *_manager;
-	QMap<QUrl, QString> _releasesGroup;
 	QList<CoverArtProvider*> _providers;
-
-	Q_ENUMS(Fetch_Operations)
-
-public:
-	enum Fetch_Operations : int
-	{
-		FO_GetReleases		= 0,
-		FO_DownloadCover	= 1,
-		FO_Search			= 2
-	};
-
-private:
-	QMap<QUrl, Fetch_Operations> _currentCalls;
-
-	QSet<QNetworkReply*> _currentCalls2;
 
 public:
 	explicit CoverFetcher(QObject *parent);
 
-	void setSelectedTracksModel(SelectedTracksModel *selectedTracksModel);
-
-	QAction * action(QMenu *parentMenu);
-
-private:
-	/** Levenshtein distance is a string metric for measuring the difference between two sequences. */
-	static size_t uiLevenshteinDistance(const std::string &s1, const std::string &s2);
-
-	void downloadCover(QByteArray ba, QNetworkReply *reply);
-
-private slots:
-	void dispatchReply(QNetworkReply *reply);
-
-	void fetch();
+public slots:
+	/** Entry point. */
+	void fetch(SelectedTracksModel *selectedTracksModel);
 };
 
 #endif // COVERFETCHER_H

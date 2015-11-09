@@ -63,7 +63,7 @@
          <item>
           <widget class="QListWidget" name="currentCover">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
@@ -118,7 +118,7 @@
       <item>
        <widget class="QGroupBox" name="remoteCoversGroupBox">
         <property name="title">
-         <string>Remote cover</string>
+         <string>Remote covers</string>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout">
          <item>

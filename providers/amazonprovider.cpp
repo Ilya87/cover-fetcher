@@ -12,13 +12,13 @@ const char* AmazonProvider::secretAccessKeyB64 = "UHk3NEdma1kxQm1rQmU3UldjL0VyN2
 const char* AmazonProvider::url = "http://ecs.amazonaws.com/onca/xml";
 const char* AmazonProvider::associateTag = "miam-player";
 
-AmazonProvider::AmazonProvider(QObject *parent)
+AmazonProvider::AmazonProvider(QNetworkAccessManager *parent)
 	: CoverArtProvider(parent)
 {
 
 }
 
-QUrl AmazonProvider::query(const QString &expr)
+QUrl AmazonProvider::query(const QString &artist, const QString &album)
 {
 	typedef QPair<QString, QString> Arg;
 	typedef QList<Arg> ArgList;
@@ -29,7 +29,7 @@ QUrl AmazonProvider::query(const QString &expr)
 	// Must be sorted by Parameter/Value pair in byte (=ASCII here) value AW... < As... < Ke... < Op...
 	ArgList args = ArgList() << Arg("AWSAccessKeyId", QByteArray::fromBase64(accessKeyB64))
 							 << Arg("AssociateTag", associateTag)
-							 << Arg("Keywords", expr)
+							 << Arg("Keywords", artist + "%20" + album)
 							 << Arg("Operation", "ItemSearch")
 							 << Arg("ResponseGroup", "Images")
 							 << Arg("SearchIndex", "Music")
@@ -82,4 +82,28 @@ QByteArray AmazonProvider::hmac(const QByteArray &key, const QByteArray &data) {
 	}
 
 	return QCryptographicHash::hash(outerPadding + QCryptographicHash::hash(innerPadding + data, QCryptographicHash::Sha256), QCryptographicHash::Sha256);
+}
+
+void AmazonProvider::dispatchReply(QNetworkReply *reply)
+{
+	// Dispatch request
+	Fetch_Operations fo = (Fetch_Operations)reply->property("requestType").toInt();
+	switch (fo) {
+	case FO_GetReleases:
+		qDebug() << Q_FUNC_INFO << "Current fetch operation GetReleases" << reply->url();
+		break;
+	case FO_DownloadCover:
+		qDebug() << Q_FUNC_INFO << "Current fetch operation DownloadCover" << reply->url();
+		break;
+	case FO_Search: {
+		qDebug() << Q_FUNC_INFO << "Current fetch operation Search" << reply->url();
+		QByteArray ba = reply->readAll();
+
+		//qDebug() << Q_FUNC_INFO << "ByteArray" << ba;
+	}
+		break;
+	default:
+		qDebug() << Q_FUNC_INFO << "Default?" << reply->url();
+		break;
+	}
 }

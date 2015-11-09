@@ -1,6 +1,7 @@
 #ifndef COVERARTPROVIDER_H
 #define COVERARTPROVIDER_H
 
+#include <QNetworkReply>
 #include <QObject>
 #include <QUrl>
 
@@ -14,12 +15,28 @@
 class MIAMCORE_LIBRARY CoverArtProvider : public QObject
 {
 	Q_OBJECT
-public:
-	explicit CoverArtProvider(QObject *parent = nullptr) : QObject(parent) {}
+private:
+	Q_ENUMS(Fetch_Operations)
 
-	virtual QUrl query(const QString &) = 0;
+protected:
+	QNetworkAccessManager *_manager;
+
+public:
+	enum Fetch_Operations : int
+	{
+		FO_GetReleases		= 0,
+		FO_DownloadCover	= 1,
+		FO_Search			= 2
+	};
+
+	explicit CoverArtProvider(QNetworkAccessManager *manager) : QObject(manager), _manager(manager) {}
+
+	virtual QUrl query(const QString &artist, const QString &album) = 0;
 
 	virtual QUrl album(const QString &) = 0;
+
+public slots:
+	virtual void dispatchReply(QNetworkReply *reply) = 0;
 };
 
 #endif // COVERARTPROVIDER_H

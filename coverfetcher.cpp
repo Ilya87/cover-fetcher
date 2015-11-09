@@ -28,115 +28,30 @@
 CoverFetcher::CoverFetcher(QObject *parent)
 	: QObject(parent)
 	, _selectedTracksModel(nullptr)
-	, _fetchDialog(new FetchDialog)
+	, _fetchDialog(nullptr)
 	, _manager(new QNetworkAccessManager(this))
 {
-	//_providers.append(new MusicBrainzProvider(this));
-	_providers.append(new AmazonProvider(this));
-	//_providers.append(new LastFMProvider(this));
-	connect(_manager, &QNetworkAccessManager::finished, this, &CoverFetcher::dispatchReply);
+	_providers.append(new MusicBrainzProvider(_manager));
+	_providers.append(new AmazonProvider(_manager));
+	//_providers.append(new LastFMProvider(_manager));
 }
 
-void CoverFetcher::setSelectedTracksModel(SelectedTracksModel *selectedTracksModel)
+/** Entry point. */
+void CoverFetcher::fetch(SelectedTracksModel *selectedTracksModel)
 {
+	qDebug() << Q_FUNC_INFO;
+	if (_fetchDialog == nullptr) {
+		_fetchDialog = new FetchDialog;
+	}
+
 	_selectedTracksModel = selectedTracksModel;
 	/// XXX: wow, kind of hack no?
 	connect(_fetchDialog, &FetchDialog::refreshView, this, [=]() {
 		_selectedTracksModel->updateSelectedTracks();
 	});
-}
-
-QAction * CoverFetcher::action(QMenu *parentMenu)
-{
-	QAction *action = new QAction(tr("Fetch covers"), parentMenu);
-	connect(action, &QAction::triggered, this, &CoverFetcher::fetch);
-	return action;
-}
-
-void CoverFetcher::downloadCover(QByteArray ba, QNetworkReply *reply)
-{
-	QString path = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
-
-	// In case we don't get the picture at the first attempt, try again
-	QVariant redirectionTarget = reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
-	if (redirectionTarget.isNull()) {
-
-		// The current covert has been downloaded to a temporary location, the lists can be populated
-		QString tmpCoverPath = QDir::toNativeSeparators(path + "/" + reply->url().fileName());
-		qDebug() << Q_FUNC_INFO << "tmpCoverPath" << tmpCoverPath;
-		QPixmap pixmap;
-		for (QGroupBox *gb : _fetchDialog->findChildren<QGroupBox*>()) {
-
-			// It's possible to have a valid release but without cover yet :(
-			if (gb->title() == _releasesGroup.value(reply->url()) && pixmap.loadFromData(ba)) {
-				QListWidget *list = gb->findChild<QListWidget*>("remoteCovers");
-				// list->clear();
-				QListWidgetItem *item = new QListWidgetItem(list);
-				item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-				item->setCheckState(Qt::Unchecked);
-				item->setIcon(QIcon(pixmap));
-				if (pixmap.save(tmpCoverPath)) {
-					// Kind of ugly way to pass data from one class to another, but it does the job (at least an enum was created)
-					item->setData(FetchDialog::LW_TmpCoverPath, tmpCoverPath);
-				}
-				break;
-			}
-		}
-	} else {
-		qDebug() << "A redirection has been detected for" << redirectionTarget.toUrl();
-		QUrl newUrl = reply->url().resolved(redirectionTarget.toUrl());
-		QString release = _releasesGroup.value(reply->url());
-		_releasesGroup.remove(reply->url());
-		_releasesGroup.insert(newUrl, release);
-		QNetworkReply *r = _manager->get(QNetworkRequest(newUrl));
-		_currentCalls.insert(r->url(), FO_DownloadCover);
-	}
-}
-
-void CoverFetcher::dispatchReply(QNetworkReply *reply)
-{
-
-	// Dispatch request
-	/*if (_currentCalls.contains(reply->url())) {
-		Fetch_Operations op = _currentCalls.value(reply->url());
-		_currentCalls.remove(reply->url());
-		switch (op) {
-		case FO_GetReleases:
-			qDebug() << Q_FUNC_INFO << "Current fetch operation GetReleases" << reply->url();
-			this->fetchReleases(ba);
-			break;
-		case FO_DownloadCover:
-			qDebug() << Q_FUNC_INFO << "Current fetch operation DownloadCover" << reply->url();
-			this->downloadCover(ba, reply);
-			break;
-		}
-	}*/
-	Fetch_Operations fo = (Fetch_Operations)reply->property("requestType").toInt();
-	switch (fo) {
-	case FO_GetReleases:
-		qDebug() << Q_FUNC_INFO << "Current fetch operation GetReleases" << reply->url();
-		break;
-	case FO_DownloadCover:
-		qDebug() << Q_FUNC_INFO << "Current fetch operation DownloadCover" << reply->url();
-		break;
-	case FO_Search: {
-		qDebug() << Q_FUNC_INFO << "Current fetch operation Search" << reply->url();
-		QByteArray ba = reply->readAll();
-	}
-	break;
-	default:
-		break;
-	}
-}
-
-void CoverFetcher::fetch()
-{
-	_releasesGroup.clear();
-	_currentCalls.clear();
 
 	QStringList tracks = _selectedTracksModel->selectedTracks();
 	SqlDatabase *db = SqlDatabase::instance();
-	//db->open();
 
 	// Format and concatenate all tracks in one big string. Replaces single quote with double quote
 	/// FIXME
@@ -169,18 +84,19 @@ void CoverFetcher::fetch()
 		if (artist != prevArtist) {
 			QLabel *labelArtist = new QLabel("Artist: " + artist);
 			_fetchDialog->scrollAreaWidgetContents->layout()->addWidget(labelArtist);
+		}
 
-			//QString tmp = QUrl::toPercentEncoding(artist);
-			for (CoverArtProvider *cp : _providers) {
-				QUrl url = cp->query(artist + " " + album);
-				QNetworkRequest request(url);
-				request.setAttribute(QNetworkRequest::User, FO_Search);
-				request.setHeader(QNetworkRequest::UserAgentHeader, "MiamPlayer/0.8.0 ( http://www.miam-player.org/ )" );
-				QNetworkReply *n = _manager->get(request);
-				n->setProperty("requestType", FO_Search);
-				//_currentCalls.insert(n->url(), FO_Search);
-				_currentCalls2.insert(n);
-			}
+		// Query all registered providers
+		for (CoverArtProvider *cp : _providers) {
+			QUrl url = cp->query(artist, album);
+			QNetworkRequest request(url);
+			request.setAttribute(QNetworkRequest::User, CoverArtProvider::FO_Search);
+			request.setHeader(QNetworkRequest::UserAgentHeader, "MiamPlayer/0.8.0 ( http://www.miam-player.org/ )" );
+			QNetworkReply *n = _manager->get(request);
+			n->setProperty("requestType", CoverArtProvider::FO_Search);
+			connect(n, &QNetworkReply::finished, this, [=]() {
+				cp->dispatchReply(n);
+			});
 		}
 
 		Ui_TemplateCovers templateCover;
@@ -236,43 +152,4 @@ void CoverFetcher::fetch()
 	_fetchDialog->scrollAreaWidgetContents->layout()->addItem(vSpacer);
 	_fetchDialog->show();
 	_fetchDialog->activateWindow();
-}
-
-
-// Compute Levenshtein Distance
-// Martin Ettl, 2012-10-05
-/** Levenshtein distance is a string metric for measuring the difference between two sequences. */
-size_t CoverFetcher::uiLevenshteinDistance(const std::string &s1, const std::string &s2)
-{
-	const size_t m(s1.size());
-	const size_t n(s2.size());
-
-	if (m==0) return n;
-	if (n==0) return m;
-
-	size_t *costs = new size_t[n + 1];
-
-	for (size_t k = 0; k <= n; k++) costs[k] = k;
-
-	size_t i = 0;
-	for (std::string::const_iterator it1 = s1.begin(); it1 != s1.end(); ++it1, ++i) {
-		costs[0] = i+1;
-		size_t corner = i;
-
-		size_t j = 0;
-		for (std::string::const_iterator it2 = s2.begin(); it2 != s2.end(); ++it2, ++j) {
-			size_t upper = costs[j+1];
-			if (*it1 == *it2) {
-				costs[j+1] = corner;
-			} else {
-				size_t t(upper < corner ? upper : corner);
-				costs[j+1] = (costs[j] < t ? costs[j] : t) + 1;
-			}
-			corner = upper;
-		}
-	}
-
-	size_t result = costs[n];
-	delete [] costs;
-	return result;
 }

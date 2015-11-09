@@ -6,6 +6,7 @@
 
 CoverFetcherPlugin::CoverFetcherPlugin(QObject *parent)
 	: ItemViewPlugin(parent)
+	, _coverFetcher(new CoverFetcher(this))
 {
 	Settings *settings = Settings::instance();
 	if (!settings->value("CoverFetcher/coverValueSize").isValid()) {
@@ -16,11 +17,12 @@ CoverFetcherPlugin::CoverFetcherPlugin(QObject *parent)
 
 CoverFetcherPlugin::~CoverFetcherPlugin()
 {
-	qDeleteAll(_coverFetchers.values());
+	//qDeleteAll(_coverFetchers.values());
 }
 
 QWidget * CoverFetcherPlugin::configPage()
 {
+	qDebug() << Q_FUNC_INFO;
 	QWidget *widget = new QWidget;
 	_ui.setupUi(widget);
 	Settings *settings = Settings::instance();
@@ -56,21 +58,22 @@ QWidget * CoverFetcherPlugin::configPage()
 QStringList CoverFetcherPlugin::classesToExtend()
 {
 	QStringList l = QStringList() << "LibraryTreeView" << "TagEditor";
-	for (QString clazz : l) {
-		CoverFetcher *cf = new CoverFetcher(this);
-		_coverFetchers.insert(clazz, cf);
-	}
 	return l;
 }
 
-QAction * CoverFetcherPlugin::action(const QString &view, QMenu *parent)
+QAction * CoverFetcherPlugin::action(const QString &view, QMenu *parentMenu)
 {
-	CoverFetcher *cf = _coverFetchers.value(view);
-	QAction *a = cf->action(parent);
-	return a;
+	QAction *action = new QAction(tr("Fetch covers"), parentMenu);
+	qDebug() << Q_FUNC_INFO << view << parentMenu;
+	connect(action, &QAction::triggered, this, [=]() {
+		SelectedTracksModel *s = _viewModels.value(view);
+		_coverFetcher->fetch(s);
+	});
+	return action;
 }
 
 void CoverFetcherPlugin::setSelectedTracksModel(const QString &view, SelectedTracksModel *selectedTracksModel)
 {
-	_coverFetchers.value(view)->setSelectedTracksModel(selectedTracksModel);
+	qDebug() << Q_FUNC_INFO << view << selectedTracksModel;
+	_viewModels.insert(view, selectedTracksModel);
 }

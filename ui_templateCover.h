@@ -69,7 +69,7 @@ public:
         horizontalLayout_4->setObjectName(QStringLiteral("horizontalLayout_4"));
         currentCover = new QListWidget(currentCoverGroupBox);
         currentCover->setObjectName(QStringLiteral("currentCover"));
-        QSizePolicy sizePolicy1(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        QSizePolicy sizePolicy1(QSizePolicy::Minimum, QSizePolicy::Expanding);
         sizePolicy1.setHorizontalStretch(0);
         sizePolicy1.setVerticalStretch(0);
         sizePolicy1.setHeightForWidth(currentCover->sizePolicy().hasHeightForWidth());
@@ -98,8 +98,11 @@ public:
         verticalLayout->setObjectName(QStringLiteral("verticalLayout"));
         remoteCovers = new QListWidget(remoteCoversGroupBox);
         remoteCovers->setObjectName(QStringLiteral("remoteCovers"));
-        sizePolicy1.setHeightForWidth(remoteCovers->sizePolicy().hasHeightForWidth());
-        remoteCovers->setSizePolicy(sizePolicy1);
+        QSizePolicy sizePolicy2(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        sizePolicy2.setHorizontalStretch(0);
+        sizePolicy2.setVerticalStretch(0);
+        sizePolicy2.setHeightForWidth(remoteCovers->sizePolicy().hasHeightForWidth());
+        remoteCovers->setSizePolicy(sizePolicy2);
         remoteCovers->setMinimumSize(QSize(32, 32));
         remoteCovers->setMaximumSize(QSize(512, 512));
         remoteCovers->setFocusPolicy(Qt::ClickFocus);
@@ -134,7 +137,7 @@ public:
     void retranslateUi(QWidget *TemplateCovers)
     {
         currentCoverGroupBox->setTitle(QApplication::translate("TemplateCovers", "Cover in your files", 0));
-        remoteCoversGroupBox->setTitle(QApplication::translate("TemplateCovers", "Remote cover", 0));
+        remoteCoversGroupBox->setTitle(QApplication::translate("TemplateCovers", "Remote covers", 0));
         Q_UNUSED(TemplateCovers);
     } // retranslateUi
 

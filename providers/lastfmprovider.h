@@ -6,9 +6,9 @@
 class MIAMCORE_LIBRARY LastFMProvider : public CoverArtProvider
 {
 public:
-	explicit LastFMProvider(QObject *parent = nullptr);
+	explicit LastFMProvider(QNetworkAccessManager *parent);
 
-	virtual QUrl query(const QString &expr) override;
+	virtual QUrl query(const QString &artist, const QString &album) override;
 
 	virtual QUrl album(const QString &expr) override;
 };
