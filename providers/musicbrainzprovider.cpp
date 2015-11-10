@@ -11,7 +11,7 @@ MusicBrainzProvider::MusicBrainzProvider(QNetworkAccessManager *parent)
 	: CoverArtProvider(parent)
 {}
 
-QUrl MusicBrainzProvider::query(const QString &artist, const QString &)
+QUrl MusicBrainzProvider::query(const QString &artist, const QString &album)
 {
 	return QUrl("http://musicbrainz.org/ws/2/release-group/?query=artist:%22" + artist + "%22;limit=100");
 }
@@ -32,13 +32,11 @@ void MusicBrainzProvider::dispatchReply(QNetworkReply *reply)
 	//	break;
 	case FO_DownloadCover:
 		qDebug() << Q_FUNC_INFO << "Current fetch operation DownloadCover" << reply->url();
-		this->downloadCover(reply->readAll(), reply);
+		this->downloadCover(reply->property("album").toString(), reply->readAll(), reply);
 		break;
 	case FO_Search: {
 		qDebug() << Q_FUNC_INFO << "Current fetch operation Search" << reply->url();
-		//QByteArray ba = reply->readAll();
-		//qDebug() << Q_FUNC_INFO << "ByteArray" << ba;
-		this->fetchReleases(reply->readAll());
+		this->fetchReleases(reply->property("album").toString(), reply->readAll());
 	}
 		break;
 	default:
@@ -46,7 +44,7 @@ void MusicBrainzProvider::dispatchReply(QNetworkReply *reply)
 	}
 }
 
-void MusicBrainzProvider::fetchReleases(const QByteArray &ba)
+void MusicBrainzProvider::fetchReleases(const QString &album, const QByteArray &ba)
 {
 	QXmlStreamReader xml(ba);
 
@@ -73,23 +71,19 @@ void MusicBrainzProvider::fetchReleases(const QByteArray &ba)
 	/// Complexity: should be improved!
 	while (it.hasNext()) {
 		it.next();
-		//qDebug() << "while:" << it.key() << it.value();
-		//for (QGroupBox *gb : findChildren<QGroupBox*>()) {
-		//for (QGroupBox *gb : _fetchDialog->findChildren<QGroupBox*>()) {
-		//if (uiLevenshteinDistance(gb->title().toLower().toStdString(), it.key().toStdString()) < 4 ||
-		//		it.key().contains(gb->title().toLower()) || gb->title().toLower().contains(it.key())) {
-			//qDebug() << "uiLevenshteinDistance: get the covert art for " << gb->title() << it.key() << it.value();
+		if (uiLevenshteinDistance(album.toLower().toStdString(), it.key().toStdString()) < 4 ||
+				it.key().contains(album.toLower()) || album.toLower().contains(it.key())) {
+			qDebug() << "uiLevenshteinDistance: get the covert art for " << album << it.key() << it.value();
 			/// FIXME: find a way to get the 500px thumbnail and to automatically download the large one after
-			//for (CoverArtProvider *provider : _providers) {
 			QUrl url = this->album(it.value());
 			QNetworkRequest request(url);
 			request.setHeader(QNetworkRequest::UserAgentHeader, "MiamPlayer/0.8.0 ( http://www.miam-player.org/ )" );
 			QNetworkReply *reply = _manager->get(request);
+			reply->setProperty("type", this->type());
 			reply->setProperty("requestType", FO_DownloadCover);
-			//}
-			//break;
-		//}
-		//}
+			reply->setProperty("album", album);
+			break;
+		}
 	}
 }
 
@@ -131,45 +125,33 @@ size_t MusicBrainzProvider::uiLevenshteinDistance(const std::string &s1, const s
 	return result;
 }
 
-void MusicBrainzProvider::downloadCover(QByteArray ba, QNetworkReply *reply)
+void MusicBrainzProvider::downloadCover(const QString &album, QByteArray ba, QNetworkReply *reply)
 {
-	QString path = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+	//QString path = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
 
 	// In case we don't get the picture at the first attempt, try again
 	QVariant redirectionTarget = reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
 	if (redirectionTarget.isNull()) {
 
-		// The current covert has been downloaded to a temporary location, the lists can be populated
-		QString tmpCoverPath = QDir::toNativeSeparators(path + "/" + reply->url().fileName());
-		qDebug() << Q_FUNC_INFO << "tmpCoverPath" << tmpCoverPath;
+		// The current cover has been downloaded to a temporary location, the lists can be populated
+		//QString tmpCoverPath = QDir::toNativeSeparators(path + "/" + reply->url().fileName());
 		QPixmap pixmap;
-		//for (QGroupBox *gb : _fetchDialog->findChildren<QGroupBox*>()) {
-		for (QGroupBox *gb : findChildren<QGroupBox*>()) {
 
-			// It's possible to have a valid release but without cover yet :(
-			/*if (gb->title() == _releasesGroup.value(reply->url()) && pixmap.loadFromData(ba)) {
-				QListWidget *list = gb->findChild<QListWidget*>("remoteCovers");
-				// list->clear();
-				QListWidgetItem *item = new QListWidgetItem(list);
-				item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-				item->setCheckState(Qt::Unchecked);
-				item->setIcon(QIcon(pixmap));
-				if (pixmap.save(tmpCoverPath)) {
-					// Kind of ugly way to pass data from one class to another, but it does the job (at least an enum was created)
-					item->setData(FetchDialog::LW_TmpCoverPath, tmpCoverPath);
-				}
-				break;
-			}*/
+		// It's possible to have a valid release but without cover yet :(
+		if (album == reply->property("album").toString() && pixmap.loadFromData(ba)) {
+			qDebug() << "aboutToCreateCover" << "album" << album;
+			emit aboutToCreateCover(album, pixmap);
 		}
 	} else {
 		qDebug() << "A redirection has been detected for" << redirectionTarget.toUrl();
 		QUrl newUrl = reply->url().resolved(redirectionTarget.toUrl());
-		QString release = _releasesGroup.value(reply->url());
-		_releasesGroup.remove(reply->url());
-		_releasesGroup.insert(newUrl, release);
-		QNetworkReply *n = _manager->get(QNetworkRequest(newUrl));
-		//connect(n, &QNetworkReply::finished, this, [=]() {
-		//	cp->dispatchReply(n);
-		//});
+		//QString release = _releasesGroup.value(reply->url());
+		//_releasesGroup.remove(reply->url());
+		//_releasesGroup.insert(newUrl, release);
+		QNetworkReply *reply = _manager->get(QNetworkRequest(newUrl));
+		reply->setProperty("type", type());
+		reply->setProperty("requestType", FO_DownloadCover);
+		reply->setProperty("album", album);
+		qDebug() << Q_FUNC_INFO << album;
 	}
 }

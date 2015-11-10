@@ -17,6 +17,7 @@ class MIAMCORE_LIBRARY CoverArtProvider : public QObject
 	Q_OBJECT
 private:
 	Q_ENUMS(Fetch_Operations)
+	Q_ENUMS(ProviderType)
 
 protected:
 	QNetworkAccessManager *_manager;
@@ -29,14 +30,27 @@ public:
 		FO_Search			= 2
 	};
 
+	enum ProviderType : int
+	{
+		PT_MusicBrainz	= 0,
+		PT_Amazon		= 1,
+		PT_Discogs		= 2,
+		PT_LastFM		= 3
+	};
+
 	explicit CoverArtProvider(QNetworkAccessManager *manager) : QObject(manager), _manager(manager) {}
 
 	virtual QUrl query(const QString &artist, const QString &album) = 0;
 
 	virtual QUrl album(const QString &) = 0;
 
+	virtual ProviderType type() = 0;
+
 public slots:
 	virtual void dispatchReply(QNetworkReply *reply) = 0;
+
+signals:
+	void aboutToCreateCover(const QString &album, const QPixmap &cover);
 };
 
 #endif // COVERARTPROVIDER_H

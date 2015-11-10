@@ -1,10 +1,11 @@
 #ifndef COVERFETCHERPLUGIN_H
 #define COVERFETCHERPLUGIN_H
 
+#include "providers/coverartprovider.h"
 #include "interfaces/itemviewplugin.h"
 #include "ui_config.h"
 
-class CoverFetcher;
+#include "fetchdialog.h"
 
 /**
  * \brief       Fetch covers using MusicBrainz.
@@ -23,11 +24,11 @@ class MIAMCORE_LIBRARY CoverFetcherPlugin : public ItemViewPlugin
 	Q_INTERFACES(ItemViewPlugin)
 
 private:
-	CoverFetcher *_coverFetcher;
-
-	QMap<QString, SelectedTracksModel*> _viewModels;
-
 	Ui::ConfigForm _ui;
+	QMap<QString, SelectedTracksModel*> _viewModels;
+	FetchDialog *_fetchDialog;
+	QList<CoverArtProvider*> _providers;
+	QNetworkAccessManager *_manager;
 
 public:
 	explicit CoverFetcherPlugin(QObject *parent = nullptr);
@@ -35,6 +36,7 @@ public:
 	virtual ~CoverFetcherPlugin();
 
 	/// From BasicPlugin
+	/** Generate UI in lazy loading mode. */
 	virtual QWidget *configPage() override;
 
 	inline virtual bool isConfigurable() const override { return true; }
@@ -49,6 +51,15 @@ public:
 	virtual QAction * action(const QString & /*view*/, QMenu * /*parent*/) override;
 
 	virtual void setSelectedTracksModel(const QString &view, SelectedTracksModel *selectedTracksModel) override;
+
+private:
+	void fetch(SelectedTracksModel *selectedTracksModel);
+
+	/** When one is checking items in the list, providers are added or removed dynamically. */
+	void manageProvider(bool enabled, QCheckBox *checkBox);
+
+public slots:
+	void addCover(const QString &album, const QPixmap &cover);
 };
 
 #endif // COVERFETCHERPLUGIN_H

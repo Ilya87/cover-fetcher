@@ -11,8 +11,8 @@
 class MIAMCORE_LIBRARY MusicBrainzProvider : public CoverArtProvider
 {
 	Q_OBJECT
-private:
-	QMap<QUrl, QString> _releasesGroup;
+//private:
+//	QMap<QUrl, QString> _releasesGroup;
 
 public:
 	explicit MusicBrainzProvider(QNetworkAccessManager *manager);
@@ -21,13 +21,15 @@ public:
 
 	virtual QUrl album(const QString &albumId) override;
 
+	inline virtual ProviderType type() override { return PT_MusicBrainz; }
+
 private:
 	/** Levenshtein distance is a string metric for measuring the difference between two sequences. */
 	static size_t uiLevenshteinDistance(const std::string &s1, const std::string &s2);
 
-	void downloadCover(QByteArray ba, QNetworkReply *reply);
+	void downloadCover(const QString &album, QByteArray ba, QNetworkReply *reply);
 
-	void fetchReleases(const QByteArray &ba);
+	void fetchReleases(const QString &album, const QByteArray &ba);
 
 public slots:
 	virtual void dispatchReply(QNetworkReply *reply) override;

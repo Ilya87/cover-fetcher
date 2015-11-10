@@ -98,7 +98,6 @@ void AmazonProvider::dispatchReply(QNetworkReply *reply)
 	case FO_Search: {
 		qDebug() << Q_FUNC_INFO << "Current fetch operation Search" << reply->url();
 		QByteArray ba = reply->readAll();
-
 		//qDebug() << Q_FUNC_INFO << "ByteArray" << ba;
 	}
 		break;

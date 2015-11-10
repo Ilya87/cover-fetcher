@@ -13,12 +13,13 @@
 #include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QButtonGroup>
+#include <QtWidgets/QCheckBox>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
-#include <QtWidgets/QListWidget>
 #include <QtWidgets/QRadioButton>
+#include <QtWidgets/QSpacerItem>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
 
@@ -36,14 +37,18 @@ public:
     QRadioButton *radioButtonDontIntegrate;
     QGroupBox *groupBoxRemoteLocations;
     QVBoxLayout *verticalLayout_2;
-    QListWidget *coverProviderListWidget;
+    QCheckBox *musicbrainzCheckBox;
+    QCheckBox *amazonCheckBox;
+    QCheckBox *discogsCheckBox;
+    QCheckBox *lastfmCheckBox;
     QLabel *workInProgress;
+    QSpacerItem *verticalSpacer;
 
     void setupUi(QWidget *ConfigForm)
     {
         if (ConfigForm->objectName().isEmpty())
             ConfigForm->setObjectName(QStringLiteral("ConfigForm"));
-        ConfigForm->resize(400, 300);
+        ConfigForm->resize(400, 315);
         ConfigForm->setWindowTitle(QStringLiteral(""));
         verticalLayout = new QVBoxLayout(ConfigForm);
         verticalLayout->setObjectName(QStringLiteral("verticalLayout"));
@@ -83,26 +88,54 @@ public:
         groupBoxRemoteLocations->setObjectName(QStringLiteral("groupBoxRemoteLocations"));
         verticalLayout_2 = new QVBoxLayout(groupBoxRemoteLocations);
         verticalLayout_2->setObjectName(QStringLiteral("verticalLayout_2"));
-        coverProviderListWidget = new QListWidget(groupBoxRemoteLocations);
-        QListWidgetItem *__qlistwidgetitem = new QListWidgetItem(coverProviderListWidget);
-        __qlistwidgetitem->setText(QStringLiteral("MusicBrainz"));
-        __qlistwidgetitem->setCheckState(Qt::Checked);
-        __qlistwidgetitem->setFlags(Qt::ItemIsSelectable|Qt::ItemIsUserCheckable|Qt::ItemIsEnabled);
-        QListWidgetItem *__qlistwidgetitem1 = new QListWidgetItem(coverProviderListWidget);
-        __qlistwidgetitem1->setText(QStringLiteral("Discogs"));
-        __qlistwidgetitem1->setCheckState(Qt::Unchecked);
-        __qlistwidgetitem1->setFlags(Qt::ItemIsSelectable|Qt::ItemIsUserCheckable|Qt::ItemIsEnabled);
-        QListWidgetItem *__qlistwidgetitem2 = new QListWidgetItem(coverProviderListWidget);
-        __qlistwidgetitem2->setText(QStringLiteral("Amazon"));
-        __qlistwidgetitem2->setCheckState(Qt::Unchecked);
-        __qlistwidgetitem2->setFlags(Qt::ItemIsSelectable|Qt::ItemIsUserCheckable|Qt::ItemIsEnabled);
-        QListWidgetItem *__qlistwidgetitem3 = new QListWidgetItem(coverProviderListWidget);
-        __qlistwidgetitem3->setText(QStringLiteral("Last.FM"));
-        __qlistwidgetitem3->setCheckState(Qt::Unchecked);
-        __qlistwidgetitem3->setFlags(Qt::ItemIsSelectable|Qt::ItemIsUserCheckable|Qt::ItemIsEnabled);
-        coverProviderListWidget->setObjectName(QStringLiteral("coverProviderListWidget"));
+        musicbrainzCheckBox = new QCheckBox(groupBoxRemoteLocations);
+        musicbrainzCheckBox->setObjectName(QStringLiteral("musicbrainzCheckBox"));
+        musicbrainzCheckBox->setText(QStringLiteral("MusicBrainz"));
+        QIcon icon;
+        icon.addFile(QStringLiteral(":/musicBrainz_logo.png"), QSize(), QIcon::Normal, QIcon::Off);
+        musicbrainzCheckBox->setIcon(icon);
+        musicbrainzCheckBox->setIconSize(QSize(46, 32));
+        musicbrainzCheckBox->setCheckable(true);
+        musicbrainzCheckBox->setChecked(true);
+        musicbrainzCheckBox->setProperty("type", QVariant(0));
 
-        verticalLayout_2->addWidget(coverProviderListWidget);
+        verticalLayout_2->addWidget(musicbrainzCheckBox);
+
+        amazonCheckBox = new QCheckBox(groupBoxRemoteLocations);
+        amazonCheckBox->setObjectName(QStringLiteral("amazonCheckBox"));
+        amazonCheckBox->setText(QStringLiteral("Amazon"));
+        QIcon icon1;
+        icon1.addFile(QStringLiteral(":/amazon_logo.png"), QSize(), QIcon::Normal, QIcon::Off);
+        amazonCheckBox->setIcon(icon1);
+        amazonCheckBox->setIconSize(QSize(87, 32));
+        amazonCheckBox->setChecked(true);
+        amazonCheckBox->setProperty("type", QVariant(1));
+
+        verticalLayout_2->addWidget(amazonCheckBox);
+
+        discogsCheckBox = new QCheckBox(groupBoxRemoteLocations);
+        discogsCheckBox->setObjectName(QStringLiteral("discogsCheckBox"));
+        discogsCheckBox->setEnabled(false);
+        discogsCheckBox->setText(QStringLiteral("Discogs"));
+        QIcon icon2;
+        icon2.addFile(QStringLiteral(":/discogs_logo.png"), QSize(), QIcon::Normal, QIcon::Off);
+        discogsCheckBox->setIcon(icon2);
+        discogsCheckBox->setIconSize(QSize(89, 32));
+        discogsCheckBox->setProperty("type", QVariant(2));
+
+        verticalLayout_2->addWidget(discogsCheckBox);
+
+        lastfmCheckBox = new QCheckBox(groupBoxRemoteLocations);
+        lastfmCheckBox->setObjectName(QStringLiteral("lastfmCheckBox"));
+        lastfmCheckBox->setEnabled(false);
+        lastfmCheckBox->setText(QStringLiteral("Last.FM"));
+        QIcon icon3;
+        icon3.addFile(QStringLiteral(":/lastfm_logo.png"), QSize(), QIcon::Normal, QIcon::Off);
+        lastfmCheckBox->setIcon(icon3);
+        lastfmCheckBox->setIconSize(QSize(101, 32));
+        lastfmCheckBox->setProperty("type", QVariant(3));
+
+        verticalLayout_2->addWidget(lastfmCheckBox);
 
         workInProgress = new QLabel(groupBoxRemoteLocations);
         workInProgress->setObjectName(QStringLiteral("workInProgress"));
@@ -113,6 +146,10 @@ public:
 
 
         verticalLayout->addWidget(groupBoxRemoteLocations);
+
+        verticalSpacer = new QSpacerItem(20, 10, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
+        verticalLayout->addItem(verticalSpacer);
 
 
         retranslateUi(ConfigForm);
@@ -127,12 +164,7 @@ public:
         radioButtonIntegrateCover->setText(QApplication::translate("ConfigForm", "Yes", 0));
         radioButtonDontIntegrate->setText(QApplication::translate("ConfigForm", "No", 0));
         groupBoxRemoteLocations->setTitle(QApplication::translate("ConfigForm", "Remote Cover Art locations", 0));
-
-        const bool __sortingEnabled = coverProviderListWidget->isSortingEnabled();
-        coverProviderListWidget->setSortingEnabled(false);
-        coverProviderListWidget->setSortingEnabled(__sortingEnabled);
-
-        workInProgress->setText(QApplication::translate("ConfigForm", "This plugin is under development, therefore only MusicBrainz Repository is implemented.", 0));
+        workInProgress->setText(QApplication::translate("ConfigForm", "This plugin is under development, therefore Discogs and Last.FM are not yet implemented.", 0));
         Q_UNUSED(ConfigForm);
     } // retranslateUi
 

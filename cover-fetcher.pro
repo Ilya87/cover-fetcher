@@ -8,7 +8,7 @@ DEFINES += MIAM_PLUGIN
 CONFIG  += dll c++11
 # TODO: how to minimize hardcoded paths?
 win32 {
-    MiamPlayerBuildDirectory = C:\dev\Miam-Player-build\qt5.6.0\src\MiamPlayer
+    MiamPlayerBuildDirectory = C:\Users\mbachelier\dev\Miam-Player-build\qt5.5.1\src\MiamPlayer
     CONFIG(debug, debug|release) {
 	target.path = $$MiamPlayerBuildDirectory\debug\plugins
 	LIBS += -Ldebug -lMiamCore
@@ -29,13 +29,12 @@ UI_DIR = $$PWD
 
 INSTALLS += target
 
-SOURCES += providers/musicbrainzprovider.cpp \
-    coverfetcher.cpp \
+SOURCES += providers/amazonprovider.cpp \
+    providers/musicbrainzprovider.cpp \
+    providers/lastfmprovider.cpp \
     coverfetcherplugin.cpp \
     coverwidgetitemdelegate.cpp \
-    fetchdialog.cpp \
-    providers/lastfmprovider.cpp \
-    providers/amazonprovider.cpp
+    fetchdialog.cpp
 
 HEADERS += interfaces/basicplugin.h \
     interfaces/itemviewplugin.h \
@@ -47,18 +46,17 @@ HEADERS += interfaces/basicplugin.h \
     model/sqldatabase.h \
     model/trackdao.h \
     model/yeardao.h \
+    providers/amazonprovider.h \
     providers/coverartprovider.h \
+    providers/lastfmprovider.h \
     providers/musicbrainzprovider.h \
     cover.h \
-    coverfetcher.h \
     coverfetcherplugin.h \
     coverwidgetitemdelegate.h \
     fetchdialog.h \
     filehelper.h \
     miamcore_global.h \
-    settings.h \
-    providers/lastfmprovider.h \
-    providers/amazonprovider.h
+    settings.h
 
 FORMS += config.ui \
     fetchdialog.ui \
