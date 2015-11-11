@@ -9,60 +9,43 @@
 // Amazon has a web crawler that looks for access keys in public source code, so we apply some encryption to these keys.
 const char* AmazonProvider::accessKeyB64 = "QUtJQUpHUVVVSFREVlBORTdOUkE=";
 const char* AmazonProvider::secretAccessKeyB64 = "UHk3NEdma1kxQm1rQmU3UldjL0VyN2dUSk9TVlFyK2NrWGxoYVJwVw==";
-const char* AmazonProvider::url = "http://ecs.amazonaws.com/onca/xml";
+const char* AmazonProvider::host = "http://ecs.amazonaws.com/onca/xml";
 const char* AmazonProvider::associateTag = "miam-player";
 
 AmazonProvider::AmazonProvider(QNetworkAccessManager *parent)
 	: CoverArtProvider(parent)
-{
-
-}
+{}
 
 QUrl AmazonProvider::query(const QString &artist, const QString &album)
 {
-	typedef QPair<QString, QString> Arg;
-	typedef QList<Arg> ArgList;
-
-	typedef QPair<QByteArray, QByteArray> EncodedArg;
-	typedef QList<EncodedArg> EncodedArgList;
-
-	// Must be sorted by Parameter/Value pair in byte (=ASCII here) value AW... < As... < Ke... < Op...
-	ArgList args = ArgList() << Arg("AWSAccessKeyId", QByteArray::fromBase64(accessKeyB64))
-							 << Arg("AssociateTag", associateTag)
-							 << Arg("Keywords", artist + "%20" + album)
-							 << Arg("Operation", "ItemSearch")
-							 << Arg("ResponseGroup", "Images")
-							 << Arg("SearchIndex", "Music")
-							 << Arg("Service", "AWSECommerceService")
-							// << Arg("Sort", "titlerank")
-							 << Arg("Timestamp", QDateTime::currentDateTime().toString("yyyy-MM-ddThh:mm:ss.zzzZ"))
-							 << Arg("Version", "2013-08-01");
-
-	EncodedArgList encoded_args;
-	QStringList queryItems;
-
 	// Encode the arguments
 	QUrlQuery urlQuery;
-	for (const Arg& arg : args) {
-		EncodedArg encoded_arg(QUrl::toPercentEncoding(arg.first), QUrl::toPercentEncoding(arg.second));
-		encoded_args << encoded_arg;
-		queryItems << QString(encoded_arg.first + "=" + encoded_arg.second);
-		urlQuery.addQueryItem(arg.first, arg.second);
-	}
+	urlQuery.addQueryItem("AWSAccessKeyId", QByteArray::fromBase64(accessKeyB64));
+	urlQuery.addQueryItem("AssociateTag", associateTag);
+	urlQuery.addQueryItem("Keywords", artist + " " + album);
+	urlQuery.addQueryItem("Operation", "ItemSearch");
+	urlQuery.addQueryItem("ResponseGroup", "Images");
+	urlQuery.addQueryItem("SearchIndex", "Music");
+	urlQuery.addQueryItem("Service", "AWSECommerceService");
+	QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-ddThh:mm:ss.zzzZ");
+	urlQuery.addQueryItem("Timestamp", timestamp);
+	urlQuery.addQueryItem("Version", "2013-08-01");
 
 	// Sign the request
-	QUrl u(url);
+	QUrl url(host);
 
 	QByteArray dataToSign = QString("GET\n%1\n%2\n%3")
-			.arg(u.host(), u.path(), queryItems.join("&"))
+			.arg(url.host(), url.path(), urlQuery.toString())
 			.toLatin1();
+
+	qDebug() << Q_FUNC_INFO << urlQuery.toString();
 
 	QByteArray signature(AmazonProvider::hmac(QByteArray::fromBase64(secretAccessKeyB64), dataToSign));
 
 	// Add the signature to the request
 	urlQuery.addQueryItem("Signature", QUrl::toPercentEncoding(signature.toBase64()));
-	u.setQuery(urlQuery);
-	return u;
+	url.setQuery(urlQuery);
+	return url;
 }
 
 QUrl AmazonProvider::album(const QString &expr)
@@ -98,7 +81,7 @@ void AmazonProvider::dispatchReply(QNetworkReply *reply)
 	case FO_Search: {
 		qDebug() << Q_FUNC_INFO << "Current fetch operation Search" << reply->url();
 		QByteArray ba = reply->readAll();
-		//qDebug() << Q_FUNC_INFO << "ByteArray" << ba;
+		qDebug() << Q_FUNC_INFO << "ByteArray" << ba;
 	}
 		break;
 	default:
