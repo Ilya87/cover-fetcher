@@ -18,32 +18,27 @@ AmazonProvider::AmazonProvider(QNetworkAccessManager *parent)
 
 QUrl AmazonProvider::query(const QString &artist, const QString &album)
 {
-	// Encode the arguments
 	QUrlQuery urlQuery;
 	urlQuery.addQueryItem("AWSAccessKeyId", QByteArray::fromBase64(accessKeyB64));
 	urlQuery.addQueryItem("AssociateTag", associateTag);
-	urlQuery.addQueryItem("Keywords", artist + " " + album);
+	urlQuery.addQueryItem("Keywords", QUrl::toPercentEncoding(artist + " " + album));
 	urlQuery.addQueryItem("Operation", "ItemSearch");
 	urlQuery.addQueryItem("ResponseGroup", "Images");
 	urlQuery.addQueryItem("SearchIndex", "Music");
 	urlQuery.addQueryItem("Service", "AWSECommerceService");
-	QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-ddThh:mm:ss.zzzZ");
-	urlQuery.addQueryItem("Timestamp", timestamp);
+	urlQuery.addQueryItem("Timestamp", QUrl::toPercentEncoding(QDateTime::currentDateTime().toString("yyyy-MM-ddThh:mm:ss.zzzZ")));
 	urlQuery.addQueryItem("Version", "2013-08-01");
 
-	// Sign the request
+	// The request must be signed with keyed-hash message authentication code
 	QUrl url(host);
 
-	QByteArray dataToSign = QString("GET\n%1\n%2\n%3")
-			.arg(url.host(), url.path(), urlQuery.toString())
+	QByteArray data = QString("GET\n%1\n%2\n%3")
+			.arg(url.host(), url.path(), urlQuery.toString(QUrl::EncodeSpaces))
 			.toLatin1();
+	QByteArray signedData(AmazonProvider::hmac(QByteArray::fromBase64(secretAccessKeyB64), data));
 
-	qDebug() << Q_FUNC_INFO << urlQuery.toString();
-
-	QByteArray signature(AmazonProvider::hmac(QByteArray::fromBase64(secretAccessKeyB64), dataToSign));
-
-	// Add the signature to the request
-	urlQuery.addQueryItem("Signature", QUrl::toPercentEncoding(signature.toBase64()));
+	// Append the signature
+	urlQuery.addQueryItem("Signature", QUrl::toPercentEncoding(signedData.toBase64()));
 	url.setQuery(urlQuery);
 	return url;
 }
@@ -53,10 +48,10 @@ QUrl AmazonProvider::album(const QString &expr)
 	return QUrl("http://ecs.amazonaws.com/onca/xml?album=" + expr);
 }
 
-
-QByteArray AmazonProvider::hmac(const QByteArray &key, const QByteArray &data) {
+/** Request must be signed with Keyed-hash Message Authentication Code and SHA-256. */
+QByteArray AmazonProvider::hmac(const QByteArray &key, const QByteArray &data)
+{
 	static int blockSize = 64;
-
 	QByteArray innerPadding(blockSize, static_cast<char>(0x36));
 	QByteArray outerPadding(blockSize, static_cast<char>(0x5c));
 	for (int i = 0; i < key.length(); i++) {

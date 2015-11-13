@@ -23,6 +23,7 @@ public:
 	inline virtual ProviderType type() override { return PT_Amazon; }
 
 private:
+	/** Request must be signed with Keyed-hash Message Authentication Code and SHA-256. */
 	static QByteArray hmac(const QByteArray &key, const QByteArray &data);
 
 public slots:
