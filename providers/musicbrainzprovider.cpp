@@ -32,12 +32,11 @@ void MusicBrainzProvider::dispatchReply(QNetworkReply *reply)
 	//	break;
 	case FO_DownloadCover:
 		qDebug() << Q_FUNC_INFO << "Current fetch operation DownloadCover" << reply->url();
-		this->downloadCover(reply->property("album").toString(), reply->readAll(), reply);
+		this->downloadCover(reply->readAll(), reply);
 		break;
-	case FO_Search: {
+	case FO_Search:
 		qDebug() << Q_FUNC_INFO << "Current fetch operation Search" << reply->url();
 		this->fetchReleases(reply->property("album").toString(), reply->readAll());
-	}
 		break;
 	default:
 		break;
@@ -125,33 +124,26 @@ size_t MusicBrainzProvider::uiLevenshteinDistance(const std::string &s1, const s
 	return result;
 }
 
-void MusicBrainzProvider::downloadCover(const QString &album, QByteArray ba, QNetworkReply *reply)
+void MusicBrainzProvider::downloadCover(QByteArray ba, QNetworkReply *reply)
 {
-	//QString path = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+	QString album = reply->property("album").toString();
 
 	// In case we don't get the picture at the first attempt, try again
 	QVariant redirectionTarget = reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
 	if (redirectionTarget.isNull()) {
 
 		// The current cover has been downloaded to a temporary location, the lists can be populated
-		//QString tmpCoverPath = QDir::toNativeSeparators(path + "/" + reply->url().fileName());
 		QPixmap pixmap;
 
 		// It's possible to have a valid release but without cover yet :(
-		if (album == reply->property("album").toString() && pixmap.loadFromData(ba)) {
-			qDebug() << "aboutToCreateCover" << "album" << album;
+		if (pixmap.loadFromData(ba)) {
 			emit aboutToCreateCover(album, pixmap);
 		}
 	} else {
-		qDebug() << "A redirection has been detected for" << redirectionTarget.toUrl();
 		QUrl newUrl = reply->url().resolved(redirectionTarget.toUrl());
-		//QString release = _releasesGroup.value(reply->url());
-		//_releasesGroup.remove(reply->url());
-		//_releasesGroup.insert(newUrl, release);
 		QNetworkReply *reply = _manager->get(QNetworkRequest(newUrl));
 		reply->setProperty("type", type());
 		reply->setProperty("requestType", FO_DownloadCover);
 		reply->setProperty("album", album);
-		qDebug() << Q_FUNC_INFO << album;
 	}
 }

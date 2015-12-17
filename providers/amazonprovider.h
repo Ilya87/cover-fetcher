@@ -26,6 +26,8 @@ private:
 	/** Request must be signed with Keyed-hash Message Authentication Code and SHA-256. */
 	static QByteArray hmac(const QByteArray &key, const QByteArray &data);
 
+	void parseSearchResults(const QString &album, const QByteArray &ba);
+
 public slots:
 	virtual void dispatchReply(QNetworkReply *reply) override;
 };

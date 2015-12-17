@@ -3,6 +3,7 @@
 #include <QCryptographicHash>
 #include <QDateTime>
 #include <QUrlQuery>
+#include <QXmlStreamReader>
 
 #include <QtDebug>
 
@@ -62,6 +63,44 @@ QByteArray AmazonProvider::hmac(const QByteArray &key, const QByteArray &data)
 	return QCryptographicHash::hash(outerPadding + QCryptographicHash::hash(innerPadding + data, QCryptographicHash::Sha256), QCryptographicHash::Sha256);
 }
 
+void AmazonProvider::parseSearchResults(const QString &album, const QByteArray &ba)
+{
+	qDebug() << Q_FUNC_INFO << album;
+	QXmlStreamReader xml(ba);
+	while (!xml.atEnd() && !xml.hasError()) {
+		xml.readNext();
+		qDebug() << Q_FUNC_INFO << "1";
+		if (xml.tokenType() == QXmlStreamReader::StartElement) {
+			/*while(xml.name() != "Item") {
+				xml.readNext();
+			}
+			qDebug() << Q_FUNC_INFO << "2";*/
+			//switch (xml.readNext()) {
+			//case QXmlStreamReader::StartElement:
+			if (xml.name() == "LargeImage") {
+				xml.readNext();
+				auto s = xml.readElementText();
+				qDebug() << Q_FUNC_INFO << s;
+				QUrl url(s);
+				QNetworkRequest request(url);
+				QNetworkReply *reply = _manager->get(request);
+				reply->setProperty("type", this->type());
+				reply->setProperty("requestType", FO_DownloadCover);
+				reply->setProperty("album", album);
+			} else {
+				//xml.skipCurrentElement();
+				xml.readNext();
+			}
+			//	break;
+			//case QXmlStreamReader::EndElement:
+			//	return;
+			//default:
+			//	break;
+			//}
+		}
+	}
+}
+
 void AmazonProvider::dispatchReply(QNetworkReply *reply)
 {
 	// Dispatch request
@@ -70,14 +109,20 @@ void AmazonProvider::dispatchReply(QNetworkReply *reply)
 	case FO_GetReleases:
 		qDebug() << Q_FUNC_INFO << "Current fetch operation GetReleases" << reply->url();
 		break;
-	case FO_DownloadCover:
+	case FO_DownloadCover: {
 		qDebug() << Q_FUNC_INFO << "Current fetch operation DownloadCover" << reply->url();
-		break;
-	case FO_Search: {
-		qDebug() << Q_FUNC_INFO << "Current fetch operation Search" << reply->url();
-		QByteArray ba = reply->readAll();
-		qDebug() << Q_FUNC_INFO << "ByteArray" << ba;
+		// The current cover has been downloaded to a temporary location, the lists can be populated
+		QPixmap pixmap;
+
+		// It's possible to have a valid release but without cover yet :(
+		if (pixmap.loadFromData(reply->readAll())) {
+			emit aboutToCreateCover(reply->property("album").toString(), pixmap);
+		}
 	}
+		break;
+	case FO_Search:
+		qDebug() << Q_FUNC_INFO << "Current fetch operation Search" << reply->url();
+		this->parseSearchResults(reply->property("album").toString(), reply->readAll());
 		break;
 	default:
 		qDebug() << Q_FUNC_INFO << "Default?" << reply->url();

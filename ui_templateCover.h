@@ -17,7 +17,6 @@
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QListWidget>
-#include <QtWidgets/QSpacerItem>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
 
@@ -29,20 +28,18 @@ public:
     QHBoxLayout *horizontalLayout;
     QGroupBox *albumCoverGroupBox;
     QHBoxLayout *horizontalLayout_2;
-    QSpacerItem *leftSpacer;
     QGroupBox *currentCoverGroupBox;
     QHBoxLayout *horizontalLayout_4;
     QListWidget *currentCover;
     QGroupBox *remoteCoversGroupBox;
     QVBoxLayout *verticalLayout;
     QListWidget *remoteCovers;
-    QSpacerItem *rightSpacer;
 
     void setupUi(QWidget *TemplateCovers)
     {
         if (TemplateCovers->objectName().isEmpty())
             TemplateCovers->setObjectName(QStringLiteral("TemplateCovers"));
-        TemplateCovers->resize(504, 287);
+        TemplateCovers->resize(656, 287);
         QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
         sizePolicy.setHorizontalStretch(0);
         sizePolicy.setVerticalStretch(0);
@@ -59,10 +56,6 @@ public:
         albumCoverGroupBox->setFlat(true);
         horizontalLayout_2 = new QHBoxLayout(albumCoverGroupBox);
         horizontalLayout_2->setObjectName(QStringLiteral("horizontalLayout_2"));
-        leftSpacer = new QSpacerItem(20, 20, QSizePolicy::Minimum, QSizePolicy::Minimum);
-
-        horizontalLayout_2->addItem(leftSpacer);
-
         currentCoverGroupBox = new QGroupBox(albumCoverGroupBox);
         currentCoverGroupBox->setObjectName(QStringLiteral("currentCoverGroupBox"));
         horizontalLayout_4 = new QHBoxLayout(currentCoverGroupBox);
@@ -74,7 +67,7 @@ public:
         sizePolicy1.setVerticalStretch(0);
         sizePolicy1.setHeightForWidth(currentCover->sizePolicy().hasHeightForWidth());
         currentCover->setSizePolicy(sizePolicy1);
-        currentCover->setMinimumSize(QSize(32, 32));
+        currentCover->setMinimumSize(QSize(100, 100));
         currentCover->setMaximumSize(QSize(512, 512));
         currentCover->setFocusPolicy(Qt::ClickFocus);
         currentCover->setContextMenuPolicy(Qt::NoContextMenu);
@@ -98,32 +91,26 @@ public:
         verticalLayout->setObjectName(QStringLiteral("verticalLayout"));
         remoteCovers = new QListWidget(remoteCoversGroupBox);
         remoteCovers->setObjectName(QStringLiteral("remoteCovers"));
-        QSizePolicy sizePolicy2(QSizePolicy::Expanding, QSizePolicy::Expanding);
-        sizePolicy2.setHorizontalStretch(0);
-        sizePolicy2.setVerticalStretch(0);
-        sizePolicy2.setHeightForWidth(remoteCovers->sizePolicy().hasHeightForWidth());
-        remoteCovers->setSizePolicy(sizePolicy2);
-        remoteCovers->setMinimumSize(QSize(32, 32));
-        remoteCovers->setMaximumSize(QSize(512, 512));
+        remoteCovers->setMinimumSize(QSize(100, 100));
         remoteCovers->setFocusPolicy(Qt::ClickFocus);
         remoteCovers->setContextMenuPolicy(Qt::NoContextMenu);
         remoteCovers->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        remoteCovers->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        remoteCovers->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
         remoteCovers->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
         remoteCovers->setEditTriggers(QAbstractItemView::NoEditTriggers);
         remoteCovers->setProperty("showDropIndicator", QVariant(false));
         remoteCovers->setDragDropMode(QAbstractItemView::NoDragDrop);
+        remoteCovers->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
         remoteCovers->setMovement(QListView::Static);
+        remoteCovers->setFlow(QListView::TopToBottom);
+        remoteCovers->setResizeMode(QListView::Adjust);
         remoteCovers->setViewMode(QListView::IconMode);
+        remoteCovers->setUniformItemSizes(true);
 
         verticalLayout->addWidget(remoteCovers);
 
 
         horizontalLayout_2->addWidget(remoteCoversGroupBox);
-
-        rightSpacer = new QSpacerItem(20, 20, QSizePolicy::Minimum, QSizePolicy::Minimum);
-
-        horizontalLayout_2->addItem(rightSpacer);
 
 
         horizontalLayout->addWidget(albumCoverGroupBox);

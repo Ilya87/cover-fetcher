@@ -202,7 +202,7 @@ void CoverFetcherPlugin::fetch(SelectedTracksModel *selectedTracksModel)
 		list->setIconSize(s);
 		list->setMinimumSize(s2);
 		list->setMaximumSize(s2);
-		list->setItemDelegate(new CoverWidgetItemDelegate(list));
+		//list->setItemDelegate(new CoverWidgetItemDelegate(list));
 	}
 
 	QSpacerItem *vSpacer = new QSpacerItem(1, 1, QSizePolicy::Fixed, QSizePolicy::Expanding);
