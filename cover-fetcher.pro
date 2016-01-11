@@ -4,9 +4,7 @@ TARGET      = $$qtLibraryTarget(cover-fetcher)
 TEMPLATE    = lib
 
 DEFINES += MIAM_PLUGIN
-
-CONFIG  += dll c++11
-CONFIG  += qtquickcompiler
+CONFIG  += plugin c++11
 
 # TODO: how to minimize hardcoded paths?
 win32 {
@@ -22,8 +20,17 @@ win32 {
     }
 }
 unix {
+    #QMAKE_CXXFLAGS += -std=c++11
+}
+unix:!macx {
     MiamPlayerBuildDirectory = /home/mbach/Miam-Player-release
     target.path = $$MiamPlayerBuildDirectory/MiamPlayer/plugins
+    LIBS += -L$$MiamPlayerBuildDirectory/MiamCore -lmiam-core
+}
+macx {
+    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.9
+    MiamPlayerBuildDirectory = /Users/mbach/dev/Miam-Player-build/src
+    target.path = $$MiamPlayerBuildDirectory/MiamPlayer/MiamPlayer.app/Contents/PlugIns
     LIBS += -L$$MiamPlayerBuildDirectory/MiamCore -lmiam-core
 }
 
