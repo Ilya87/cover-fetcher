@@ -21,7 +21,9 @@ public:
 	explicit CoverWidgetItemDelegate(QListWidget *parent);
 
 	/** Redefined to display a checkbox in top-left corner. */
-	void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
+	virtual void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
+
+	virtual QSize sizeHint(const QStyleOptionViewItem &, const QModelIndex &) const;
 };
 
 #endif // COVERWIDGETITEMDELEGATE_H

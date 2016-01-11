@@ -27,6 +27,7 @@ private:
 	Ui::ConfigForm _ui;
 	QMap<QString, SelectedTracksModel*> _viewModels;
 	FetchDialog *_fetchDialog;
+
 	QList<CoverArtProvider*> _providers;
 	QNetworkAccessManager *_manager;
 

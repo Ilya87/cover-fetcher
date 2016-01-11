@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>656</width>
-    <height>287</height>
+    <width>447</width>
+    <height>192</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -31,6 +31,12 @@
    </property>
    <item>
     <widget class="QGroupBox" name="albumCoverGroupBox">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="title">
       <string notr="true">Album</string>
      </property>
@@ -38,12 +44,15 @@
       <bool>true</bool>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetMaximumSize</enum>
+      </property>
       <item>
-       <widget class="QGroupBox" name="currentCoverGroupBox">
+       <widget class="QGroupBox" name="groupBox">
         <property name="title">
-         <string>Cover in your files</string>
+         <string>GroupBox</string>
         </property>
-        <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <layout class="QVBoxLayout" name="verticalLayout">
          <item>
           <widget class="QListWidget" name="currentCover">
            <property name="sizePolicy">
@@ -70,12 +79,6 @@
            <property name="contextMenuPolicy">
             <enum>Qt::NoContextMenu</enum>
            </property>
-           <property name="verticalScrollBarPolicy">
-            <enum>Qt::ScrollBarAlwaysOff</enum>
-           </property>
-           <property name="horizontalScrollBarPolicy">
-            <enum>Qt::ScrollBarAlwaysOff</enum>
-           </property>
            <property name="sizeAdjustPolicy">
             <enum>QAbstractScrollArea::AdjustToContents</enum>
            </property>
@@ -88,11 +91,23 @@
            <property name="dragDropMode">
             <enum>QAbstractItemView::NoDragDrop</enum>
            </property>
+           <property name="horizontalScrollMode">
+            <enum>QAbstractItemView::ScrollPerPixel</enum>
+           </property>
            <property name="movement">
             <enum>QListView::Static</enum>
            </property>
+           <property name="flow">
+            <enum>QListView::TopToBottom</enum>
+           </property>
+           <property name="resizeMode">
+            <enum>QListView::Adjust</enum>
+           </property>
            <property name="viewMode">
             <enum>QListView::IconMode</enum>
+           </property>
+           <property name="uniformItemSizes">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -100,11 +115,11 @@
        </widget>
       </item>
       <item>
-       <widget class="QGroupBox" name="remoteCoversGroupBox">
+       <widget class="QGroupBox" name="groupBox_2">
         <property name="title">
-         <string>Remote covers</string>
+         <string>GroupBox</string>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout">
+        <layout class="QVBoxLayout" name="verticalLayout_2">
          <item>
           <widget class="QListWidget" name="remoteCovers">
            <property name="minimumSize">
@@ -118,12 +133,6 @@
            </property>
            <property name="contextMenuPolicy">
             <enum>Qt::NoContextMenu</enum>
-           </property>
-           <property name="verticalScrollBarPolicy">
-            <enum>Qt::ScrollBarAlwaysOff</enum>
-           </property>
-           <property name="horizontalScrollBarPolicy">
-            <enum>Qt::ScrollBarAsNeeded</enum>
            </property>
            <property name="sizeAdjustPolicy">
             <enum>QAbstractScrollArea::AdjustToContents</enum>

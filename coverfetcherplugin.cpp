@@ -161,12 +161,21 @@ void CoverFetcherPlugin::fetch(SelectedTracksModel *selectedTracksModel)
 		templateCover.setupUi(covers);
 		// Fill the groupBox title with an Album from this Artist
 		templateCover.albumCoverGroupBox->setTitle(album);
+		templateCover.albumCoverGroupBox->layout()->setSizeConstraint(QLayout::SetMaximumSize);
+		//templateCover.layout()->setSizeConstraint(QLayout::SetMaximumSize);
 
-		/// TODO: animate gif
-		/*QListWidgetItem *remoteTmpCover = new QListWidgetItem;
-		remoteTmpCover->setIcon(QIcon(":/loading"));
-		remoteTmpCover->setText();
-		templateCover.remoteCovers->addItem(remoteTmpCover);*/
+		templateCover.albumCoverGroupBox->setMinimumHeight(size + 10);
+		templateCover.albumCoverGroupBox->setMinimumWidth(size + 10);
+		templateCover.albumCoverGroupBox->setMaximumHeight(size + 10);
+		templateCover.albumCoverGroupBox->setMaximumWidth(size + 10);
+
+		//templateCover.remoteCoversGroupBox->setMinimumHeight(size + 10);
+		//templateCover.remoteCoversGroupBox->setMinimumWidth(size + 10);
+		//templateCover.remoteCoversGroupBox->setMaximumHeight(size + 10);
+		//templateCover.remoteCoversGroupBox->setMaximumWidth(size + 10);
+
+		//QLayoutItem *itemLayout = templateCover.remoteCoversGroupBox->layout()->itemAt(0);
+		//qDebug() << Q_FUNC_INFO << itemLayout->widget();
 
 		QListWidgetItem *currentCover = new QListWidgetItem;
 		currentCover->setData(FetchDialog::LW_Artist, artistId);
@@ -198,11 +207,11 @@ void CoverFetcherPlugin::fetch(SelectedTracksModel *selectedTracksModel)
 
 	// Initialize size with right value from slider
 	for (QListWidget *list : _fetchDialog->findChildren<QListWidget*>()) {
-		list->setDragDropMode(QListWidget::NoDragDrop);
+		//list->setDragDropMode(QListWidget::NoDragDrop);
 		list->setIconSize(s);
-		list->setMinimumSize(s2);
-		list->setMaximumSize(s2);
-		//list->setItemDelegate(new CoverWidgetItemDelegate(list));
+		//list->setMinimumSize(s2);
+		//list->setMaximumSize(s2);
+		list->setItemDelegate(new CoverWidgetItemDelegate(list));
 	}
 
 	QSpacerItem *vSpacer = new QSpacerItem(1, 1, QSizePolicy::Fixed, QSizePolicy::Expanding);
@@ -250,7 +259,8 @@ void CoverFetcherPlugin::addCover(const QString &album, const QPixmap &cover)
 {
 	qDebug() << Q_FUNC_INFO << album;
 	for (QGroupBox *gb : _fetchDialog->findChildren<QGroupBox*>("albumCoverGroupBox")) {
-		qDebug() << Q_FUNC_INFO << gb->objectName();
+
+		qDebug() << Q_FUNC_INFO << gb->layout()->sizeConstraint();
 		if (gb->title() == album) {
 			QListWidget *list = gb->findChild<QListWidget*>("remoteCovers");
 			QListWidgetItem *item = new QListWidgetItem(list);

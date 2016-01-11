@@ -32,9 +32,12 @@ void CoverWidgetItemDelegate::paint(QPainter *painter, const QStyleOptionViewIte
 	// Cover art
 	QListWidgetItem *item = _listWidget->item(index.row());
 	QRect cover(option.rect.x() + 1, option.rect.y() + 1, _listWidget->iconSize().width() - 1, _listWidget->iconSize().height() - 1);
-
 	int v = Settings::instance()->value("CoverFetcher/coverValueSize", 64).toInt();
+	//cover.translate(index.row() * v, 0);
+	qDebug() << index.row() << index.column() << cover;
+
 	QRect target(cover.topLeft(), QSize(v, v));
+	//painter->translate(index.row() * v, 0);
 	painter->drawPixmap(target, item->icon().pixmap(_listWidget->iconSize()), cover);
 
 	// Checkbox
@@ -46,5 +49,13 @@ void CoverWidgetItemDelegate::paint(QPainter *painter, const QStyleOptionViewIte
 		btn.state |= item->checkState() == Qt::Checked ? QStyle::State_On : QStyle::State_Off;
 		QStyle *style = QApplication::style();
 		style->drawControl(QStyle::CE_CheckBox, &btn, painter);
+		//style->drawControl(QStyle::CE_RadioButton, &btn, painter);
 	}
+}
+
+QSize CoverWidgetItemDelegate::sizeHint(const QStyleOptionViewItem &, const QModelIndex &) const
+{
+	int size = Settings::instance()->value("CoverFetcher/coverValueSize").toInt();
+	QSize s(size, size);
+	return s;
 }

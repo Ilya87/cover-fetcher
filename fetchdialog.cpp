@@ -16,7 +16,7 @@
 #include <QtDebug>
 
 FetchDialog::FetchDialog(QWidget *parent) :
-	QDialog(parent)
+	QDialog(parent, Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint)
 {
 	this->setupUi(this);
 
@@ -131,12 +131,15 @@ void FetchDialog::updateCoverSize(int value)
 	previewSizeValue->setText(QString(tr("%1px")).arg(size));
 	QSize iconSize(size, size);
 	for (QListWidget *listWidget : this->findChildren<QListWidget*>()) {
-		listWidget->setIconSize(iconSize);
 		listWidget->setMinimumHeight(size + 10);
 		listWidget->setMaximumHeight(size + 10);
-		//if (listWidget->objectName() == "currentCover") {
-		listWidget->setMinimumWidth(size + 10);
-		listWidget->setMaximumWidth(size + 10);
-		//}
+		if (listWidget->objectName() == "currentCover") {
+			listWidget->setMinimumWidth(size + 10);
+			listWidget->setMaximumWidth(size + 10);
+		} else {
+			listWidget->setMinimumWidth(size + 10);
+		}
+		listWidget->setIconSize(iconSize);
+		qDebug() << Q_FUNC_INFO << listWidget->parent();
 	}
 }

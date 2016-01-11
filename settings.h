@@ -22,18 +22,30 @@ private:
 	Settings(const QString &organization = "MmeMiamMiam",
 			 const QString &application = "MiamPlayer");
 
+	Q_ENUMS(RequestSqlModel)
+
 public:
+	enum RequestSqlModel { RSM_Hierarchical = 1,
+						   RSM_Flat			= 2};
+
 	/** Singleton Pattern to easily use Settings everywhere in the app. */
 	static Settings* instance();
 
 	/** Returns the last view activated by the user. Used when reopening the player. */
 	QString lastActiveView() const;
 
+	RequestSqlModel sqlModel() const;
+
 	/** Returns the actual theme name. */
 	QString theme() const;
 
 	/** Returns volume from the slider. */
 	qreal volume() const;
+
+	QMap<QString, QVariant> shortcuts() const;
+
+private:
+	void initShortcuts();
 
 public slots:
 	/** Sets the last view activated by the user. Used when reopening the player. */

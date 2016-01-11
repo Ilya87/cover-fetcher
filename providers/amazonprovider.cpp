@@ -69,7 +69,6 @@ void AmazonProvider::parseSearchResults(const QString &album, const QByteArray &
 	QXmlStreamReader xml(ba);
 	while (!xml.atEnd() && !xml.hasError()) {
 		xml.readNext();
-		qDebug() << Q_FUNC_INFO << "1";
 		if (xml.tokenType() == QXmlStreamReader::StartElement) {
 			/*while(xml.name() != "Item") {
 				xml.readNext();
