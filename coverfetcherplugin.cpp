@@ -107,13 +107,15 @@ void CoverFetcherPlugin::fetch(SelectedTracksModel *selectedTracksModel)
 		selectedTracksModel->updateSelectedTracks();
 	});
 
-	QStringList tracks = selectedTracksModel->selectedTracks();
 	SqlDatabase *db = SqlDatabase::instance();
 
 	// Format and concatenate all tracks in one big string. Replaces single quote with double quote
 	/// FIXME
-	QString l;
-	l = tracks.join("\",\"").prepend("\"").append("\"");
+	QStringList tracks;
+	for (QUrl u : selectedTracksModel->selectedTracks()) {
+		tracks << u.toLocalFile();
+	}
+	QString l = tracks.join("\",\"").prepend("\"").append("\"");
 
 	QString strArtistsAlbums = "SELECT DISTINCT art.name, alb.name, cover, internalCover, t.artistId, t.albumId " \
 		"FROM tracks t INNER JOIN albums alb ON t.albumId = alb.id " \
@@ -211,7 +213,8 @@ void CoverFetcherPlugin::fetch(SelectedTracksModel *selectedTracksModel)
 		list->setIconSize(s);
 		//list->setMinimumSize(s2);
 		//list->setMaximumSize(s2);
-		list->setItemDelegate(new CoverWidgetItemDelegate(list));
+		/// FIXME
+		//list->setItemDelegate(new CoverWidgetItemDelegate(list));
 	}
 
 	QSpacerItem *vSpacer = new QSpacerItem(1, 1, QSizePolicy::Fixed, QSizePolicy::Expanding);
