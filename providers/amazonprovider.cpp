@@ -111,12 +111,13 @@ void AmazonProvider::dispatchReply(QNetworkReply *reply)
 	case FO_DownloadCover: {
 		qDebug() << Q_FUNC_INFO << "Current fetch operation DownloadCover" << reply->url();
 		// The current cover has been downloaded to a temporary location, the lists can be populated
-		QPixmap pixmap;
+		//QPixmap pixmap;
 
 		// It's possible to have a valid release but without cover yet :(
-		if (pixmap.loadFromData(reply->readAll())) {
-			emit aboutToCreateCover(reply->property("album").toString(), pixmap);
-		}
+		//if (pixmap.loadFromData()) {
+		QByteArray ba = reply->readAll();
+		emit aboutToCreateCover(reply->property("album").toString(), ba);
+		//}
 	}
 		break;
 	case FO_Search:

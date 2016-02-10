@@ -8,15 +8,15 @@ CONFIG  += plugin c++11
 
 # TODO: how to minimize hardcoded paths?
 win32 {
-    MiamPlayerBuildDirectory = C:\dev\Miam-Player-build\src\MiamPlayer
+    MiamPlayerBuildDirectory = C:\dev\Miam-Player-build\src\Player
     CONFIG(debug, debug|release) {
 	target.path = $$MiamPlayerBuildDirectory\debug\plugins
-	LIBS += -Ldebug -lMiamCore
+	LIBS += -Ldebug -lCore
     }
 
     CONFIG(release, debug|release) {
 	target.path = $$MiamPlayerBuildDirectory\release\plugins
-	LIBS += -Lrelease -lMiamCore
+	LIBS += -Lrelease -lCore
     }
 }
 unix {

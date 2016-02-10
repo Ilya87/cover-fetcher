@@ -5,8 +5,6 @@
 #include "interfaces/itemviewplugin.h"
 #include "ui_config.h"
 
-#include "fetchdialog.h"
-
 /**
  * \brief       Fetch covers using MusicBrainz.
  * \details		This plugin is the first plugin for MiamPlayer which goes on the web to do a specific job: fetching missing covers.
@@ -14,7 +12,7 @@
  *		difficult to make perfect interfaces when you only have written one plugin. Moreover, fetching covers using MusicBrainz' webservice
  *		is kind hard because string matching is a complex problem. In the future, other webservices could be added without too much effort.
  * \author      Matthieu Bachelier
- * \version     0.7
+ * \version     0.8
  * \copyright   GNU General Public License v3
  */
 class MIAMCORE_LIBRARY CoverFetcherPlugin : public ItemViewPlugin
@@ -26,7 +24,6 @@ class MIAMCORE_LIBRARY CoverFetcherPlugin : public ItemViewPlugin
 private:
 	Ui::ConfigForm _ui;
 	QMap<QString, SelectedTracksModel*> _viewModels;
-	FetchDialog *_fetchDialog;
 
 	QList<CoverArtProvider*> _providers;
 	QNetworkAccessManager *_manager;
@@ -58,9 +55,6 @@ private:
 
 	/** When one is checking items in the list, providers are added or removed dynamically. */
 	void manageProvider(bool enabled, QCheckBox *checkBox);
-
-public slots:
-	void addCover(const QString &album, const QPixmap &cover);
 };
 
 #endif // COVERFETCHERPLUGIN_H

@@ -23,7 +23,7 @@ public:
 	/** Redefined to display a checkbox in top-left corner. */
 	virtual void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
 
-	virtual QSize sizeHint(const QStyleOptionViewItem &, const QModelIndex &) const;
+	virtual QSize sizeHint(const QStyleOptionViewItem &, const QModelIndex &) const override;
 };
 
 #endif // COVERWIDGETITEMDELEGATE_H

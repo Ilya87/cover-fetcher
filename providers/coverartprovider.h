@@ -50,7 +50,7 @@ public slots:
 	virtual void dispatchReply(QNetworkReply *reply) = 0;
 
 signals:
-	void aboutToCreateCover(const QString &album, const QPixmap &cover);
+	void aboutToCreateCover(const QString &album, const QByteArray &coverByteArray);
 };
 
 #endif // COVERARTPROVIDER_H

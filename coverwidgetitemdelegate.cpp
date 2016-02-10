@@ -8,8 +8,9 @@
 
 #include <QtDebug>
 
-CoverWidgetItemDelegate::CoverWidgetItemDelegate(QListWidget *parent) :
-	QStyledItemDelegate(parent), _listWidget(parent)
+CoverWidgetItemDelegate::CoverWidgetItemDelegate(QListWidget *parent)
+	: QStyledItemDelegate(parent)
+	, _listWidget(parent)
 {
 	if (_listWidget->objectName() == "remoteCovers") {
 		connect(_listWidget, &QListWidget::itemClicked, this, [=](QListWidgetItem *item) {

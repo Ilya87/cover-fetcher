@@ -133,12 +133,13 @@ void MusicBrainzProvider::downloadCover(QByteArray ba, QNetworkReply *reply)
 	if (redirectionTarget.isNull()) {
 
 		// The current cover has been downloaded to a temporary location, the lists can be populated
-		QPixmap pixmap;
+		//QPixmap pixmap;
 
 		// It's possible to have a valid release but without cover yet :(
-		if (pixmap.loadFromData(ba)) {
-			emit aboutToCreateCover(album, pixmap);
-		}
+		//if (pixmap.loadFromData(ba)) {
+		//	emit aboutToCreateCover(album, pixmap);
+		//}
+		emit aboutToCreateCover(album, ba);
 	} else {
 		QUrl newUrl = reply->url().resolved(redirectionTarget.toUrl());
 		QNetworkReply *reply = _manager->get(QNetworkRequest(newUrl));

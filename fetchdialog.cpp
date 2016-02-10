@@ -1,6 +1,5 @@
 #include "fetchdialog.h"
 
-#include "cover.h"
 #include "filehelper.h"
 #include "settings.h"
 #include "model/sqldatabase.h"
@@ -15,10 +14,11 @@
 
 #include <QtDebug>
 
-FetchDialog::FetchDialog(QWidget *parent) :
-	QDialog(parent, Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint)
+FetchDialog::FetchDialog(const QList<CoverArtProvider *> &providers, QWidget *parent)
+	: QDialog(parent, Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint)
 {
 	this->setupUi(this);
+	this->setAttribute(Qt::WA_DeleteOnClose);
 
 	// Change UI
 	connect(previewSizeSlider, &QSlider::valueChanged, this, &FetchDialog::updateCoverSize);
@@ -34,35 +34,77 @@ FetchDialog::FetchDialog(QWidget *parent) :
 		if (QDialogButtonBox::ApplyRole == buttonBox->buttonRole(button)) {
 			this->applyChanges();
 		}
-		this->clear();
+		this->deleteLater();
 	});
+
+	for (CoverArtProvider *coverArtProvider : providers) {
+		connect(coverArtProvider, &CoverArtProvider::aboutToCreateCover, this, &FetchDialog::addCover);
+	}
+}
+
+FetchDialog::~FetchDialog()
+{
+
 }
 
 void FetchDialog::closeEvent(QCloseEvent *)
 {
-	this->clear();
+	Settings::instance()->setValue("CoverFetcher/geometry", saveGeometry());
 }
 
-void FetchDialog::clear()
+bool FetchDialog::integrateCoverToFile(Cover *cover, QString artistId, QString albumId)
 {
-	QLayoutItem *child;
-	while ((child = scrollAreaWidgetContents->layout()->takeAt(0)) != 0) {
-		if (child->widget()) {
-			delete child->widget();
-		}
-		delete child;
-	}
-	scrollArea->verticalScrollBar()->setValue(0);
+	SqlDatabase db;
+	db.open();
 
-	Settings::instance()->setValue("CoverFetcher/geometry", saveGeometry());
+	QSqlQuery findTracks(db);
+	findTracks.prepare("SELECT uri FROM tracks WHERE artistId = ? AND albumId = ?");
+	findTracks.addBindValue(artistId);
+	findTracks.addBindValue(albumId);
+	bool b = findTracks.exec();
+	while (findTracks.next()) {
+		FileHelper fh(findTracks.record().value(0).toString());
+		fh.setCover(cover);
+		if (fh.save()) {
+			qDebug() << "Cover has been successfully integrated into file" << fh.fileInfo().absoluteFilePath();
+		} else {
+			qDebug() << "Cover wasn't integrated into file" << fh.fileInfo().absoluteFilePath();
+		}
+	}
+
+	QSqlQuery updateTracks(db);
+	updateTracks.prepare("UPDATE tracks SET internalCover = 1 WHERE artistId = ? AND albumId = ?");
+	updateTracks.addBindValue(artistId);
+	updateTracks.addBindValue(albumId);
+	b = updateTracks.exec();
+
+	return b;
+}
+
+void FetchDialog::addCover(const QString &album, const QByteArray &coverByteArray)
+{
+	qDebug() << Q_FUNC_INFO << album;
+	for (QGroupBox *gb : findChildren<QGroupBox*>("albumCoverGroupBox")) {
+
+		qDebug() << Q_FUNC_INFO << gb->layout()->sizeConstraint();
+		if (gb->title() == album) {
+			QListWidget *list = gb->findChild<QListWidget*>("remoteCovers");
+			QListWidgetItem *item = new QListWidgetItem(list);
+			item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+			item->setCheckState(Qt::Unchecked);
+
+			QPixmap pixmap;
+			pixmap.loadFromData(coverByteArray);
+			item->setIcon(QIcon(pixmap));
+			item->setData(LW_CoverData, coverByteArray);
+			break;
+		}
+	}
 }
 
 void FetchDialog::applyChanges()
 {
 	bool integrateCoverToFiles = Settings::instance()->value("CoverFetcher/integrateCoverToFiles").toBool();
-
-	SqlDatabase *db = SqlDatabase::instance();
-	//db->open();
 
 	for (QGroupBox *gb : this->findChildren<QGroupBox*>("albumCoverGroupBox")) {
 		QListWidget *currentCoverList = gb->findChild<QListWidget*>("currentCover");
@@ -75,32 +117,17 @@ void FetchDialog::applyChanges()
 
 			// Convenient way to get data
 			QListWidgetItem *item = remoteCoverList->item(i);
-			Cover c(item->data(LW_TmpCoverPath).toString());
+			Cover *c = new Cover(item->data(LW_CoverData).toByteArray());
 			if (item->checkState() == Qt::Checked) {
 
 				// Create inner cover for each file
 				if (integrateCoverToFiles) {
 
 					// Before creating the cover, we have to know which file to process
-					QSqlQuery findTracks(*db);
-					findTracks.prepare("SELECT uri FROM tracks WHERE artistId = ? AND albumId = ?");
-					findTracks.addBindValue(artistId);
-					findTracks.addBindValue(albumId);
-					bool b = findTracks.exec();
-					qDebug() << "selecting tracks to update" << b << artistId << albumId;
-					while (findTracks.next()) {
-						FileHelper fh(findTracks.record().value(0).toString());
-						fh.setCover(&c);
-						b = fh.save();
-						qDebug() << "writing cover into file" << b << fh.title();
-					}
-
-					QSqlQuery updateTracks(*db);
-					updateTracks.prepare("UPDATE tracks SET internalCover = 1 WHERE artistId = ? AND albumId = ?");
-					updateTracks.addBindValue(artistId);
-					updateTracks.addBindValue(albumId);
-					b = updateTracks.exec();
+					bool b = this->integrateCoverToFile(c, artistId, albumId);
 					qDebug() << "updating tracks" << b;
+				} else {
+					/// TODO
 				}
 				break;
 			}

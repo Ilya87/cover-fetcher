@@ -31,8 +31,11 @@ public:
 	/** Singleton Pattern to easily use Settings everywhere in the app. */
 	static Settings* instance();
 
-	/** Returns the last view activated by the user. Used when reopening the player. */
-	QString lastActiveView() const;
+	/** Returns true if the button in parameter is visible or not. */
+	bool isMediaButtonVisible(const QString & buttonName) const;
+
+	/** Sets if the button in parameter is visible or not. */
+	void setMediaButtonVisible(const QString & buttonName, const bool &value);
 
 	QMap<QString, QVariant> shortcuts() const;
 
@@ -48,9 +51,6 @@ private:
 	void initShortcuts();
 
 public slots:
-	/** Sets the last view activated by the user. Used when reopening the player. */
-	void setLastActiveView(const QString &viewName);
-
 	/** Sets a new theme. */
 	void setThemeName(const QString &theme);
 
@@ -58,7 +58,9 @@ public slots:
 	void setVolume(qreal v);
 
 signals:
-	void themeHasChanged();
+	void mediaButtonVisibilityChanged(const QString &buttonName, bool value);
+
+	void themeHasChanged(const QString &theme);
 };
 
 #endif // SETTINGS_H

@@ -7,6 +7,7 @@
 #include "coverwidgetitemdelegate.h"
 #include "providers/amazonprovider.h"
 #include "providers/musicbrainzprovider.h"
+#include "fetchdialog.h"
 
 #include <QSqlQuery>
 #include <QSqlRecord>
@@ -15,7 +16,6 @@
 
 CoverFetcherPlugin::CoverFetcherPlugin(QObject *parent)
 	: ItemViewPlugin(parent)
-	, _fetchDialog(nullptr)
 	, _manager(new QNetworkAccessManager(this))
 {
 	Settings *settings = Settings::instance();
@@ -35,9 +35,6 @@ CoverFetcherPlugin::CoverFetcherPlugin(QObject *parent)
 	if (settings->value("CoverFetcher/amazonCheckBox").toBool()) {
 		_providers.append(new AmazonProvider(_manager));
 	}
-	for (CoverArtProvider *cap : _providers) {
-		connect(cap, &CoverArtProvider::aboutToCreateCover, this, &CoverFetcherPlugin::addCover);
-	}
 
 	// Dispatch replies to specialized class
 	connect(_manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply *reply) {
@@ -55,7 +52,7 @@ CoverFetcherPlugin::~CoverFetcherPlugin()
 }
 
 /** Generate UI in lazy loading mode. */
-QWidget * CoverFetcherPlugin::configPage()
+QWidget *CoverFetcherPlugin::configPage()
 {
 	QWidget *widget = new QWidget;
 	_ui.setupUi(widget);
@@ -91,23 +88,22 @@ QAction * CoverFetcherPlugin::action(const QString &view, QMenu *parentMenu)
 
 void CoverFetcherPlugin::setSelectedTracksModel(const QString &view, SelectedTracksModel *selectedTracksModel)
 {
+	qDebug() << Q_FUNC_INFO << view;
 	_viewModels.insert(view, selectedTracksModel);
 }
 
 /** Entry point. */
 void CoverFetcherPlugin::fetch(SelectedTracksModel *selectedTracksModel)
 {
-	qDebug() << Q_FUNC_INFO;
-	if (_fetchDialog == nullptr) {
-		_fetchDialog = new FetchDialog;
-	}
+	FetchDialog *fetchDialog = new FetchDialog(_providers);
 
 	/// XXX: wow, kind of hack no?
-	connect(_fetchDialog, &FetchDialog::refreshView, this, [=]() {
+	connect(fetchDialog, &FetchDialog::refreshView, this, [=]() {
 		selectedTracksModel->updateSelectedTracks();
 	});
 
-	SqlDatabase *db = SqlDatabase::instance();
+	SqlDatabase db;
+	db.open();
 
 	// Format and concatenate all tracks in one big string. Replaces single quote with double quote
 	/// FIXME
@@ -123,7 +119,7 @@ void CoverFetcherPlugin::fetch(SelectedTracksModel *selectedTracksModel)
 		"ORDER BY art.name, alb.year";
 	QString artistId, albumId;
 
-	QSqlQuery qArtistsAlbums(*db);
+	QSqlQuery qArtistsAlbums(db);
 	qArtistsAlbums.exec(strArtistsAlbums);
 
 	QString prevArtist = "";
@@ -142,7 +138,7 @@ void CoverFetcherPlugin::fetch(SelectedTracksModel *selectedTracksModel)
 		// Send a new request for fetching artists only if it's a new one
 		if (artist != prevArtist) {
 			QLabel *labelArtist = new QLabel("Artist: " + artist);
-			_fetchDialog->scrollAreaWidgetContents->layout()->addWidget(labelArtist);
+			fetchDialog->scrollAreaWidgetContents->layout()->addWidget(labelArtist);
 		}
 
 		// Query all registered providers
@@ -159,7 +155,7 @@ void CoverFetcherPlugin::fetch(SelectedTracksModel *selectedTracksModel)
 		}
 
 		Ui_TemplateCovers templateCover;
-		QWidget *covers = new QWidget(_fetchDialog);
+		QWidget *covers = new QWidget(fetchDialog);
 		templateCover.setupUi(covers);
 		// Fill the groupBox title with an Album from this Artist
 		templateCover.albumCoverGroupBox->setTitle(album);
@@ -186,7 +182,7 @@ void CoverFetcherPlugin::fetch(SelectedTracksModel *selectedTracksModel)
 		if (cover.isEmpty() && internalCover == false) {
 			currentCover->setIcon(QIcon(":/icons/disc"));
 		} else if (internalCover) {
-			QSqlQuery oneTrack(*db);
+			QSqlQuery oneTrack(db);
 			oneTrack.prepare("SELECT uri FROM tracks WHERE artistId = ? AND albumId = ? LIMIT 1");
 			oneTrack.addBindValue(artistId);
 			oneTrack.addBindValue(albumId);
@@ -203,12 +199,12 @@ void CoverFetcherPlugin::fetch(SelectedTracksModel *selectedTracksModel)
 			currentCover->setIcon(QIcon(cover));
 		}
 		templateCover.currentCover->addItem(currentCover);
-		_fetchDialog->scrollAreaWidgetContents->layout()->addWidget(covers);
+		fetchDialog->scrollAreaWidgetContents->layout()->addWidget(covers);
 		prevArtist = artist;
 	}
 
 	// Initialize size with right value from slider
-	for (QListWidget *list : _fetchDialog->findChildren<QListWidget*>()) {
+	for (QListWidget *list : fetchDialog->findChildren<QListWidget*>()) {
 		//list->setDragDropMode(QListWidget::NoDragDrop);
 		list->setIconSize(s);
 		//list->setMinimumSize(s2);
@@ -218,9 +214,9 @@ void CoverFetcherPlugin::fetch(SelectedTracksModel *selectedTracksModel)
 	}
 
 	QSpacerItem *vSpacer = new QSpacerItem(1, 1, QSizePolicy::Fixed, QSizePolicy::Expanding);
-	_fetchDialog->scrollAreaWidgetContents->layout()->addItem(vSpacer);
-	_fetchDialog->show();
-	_fetchDialog->activateWindow();
+	fetchDialog->scrollAreaWidgetContents->layout()->addItem(vSpacer);
+	fetchDialog->show();
+	fetchDialog->activateWindow();
 }
 
 /** When one is checking items in the list, providers are added or removed dynamically. */
@@ -243,7 +239,6 @@ void CoverFetcherPlugin::manageProvider(bool enabled, QCheckBox *checkBox)
 		}
 		if (cap != nullptr) {
 			_providers.append(cap);
-			connect(cap, &CoverArtProvider::aboutToCreateCover, this, &CoverFetcherPlugin::addCover);
 		}
 	} else {
 		QListIterator<CoverArtProvider*> it(_providers);
@@ -254,27 +249,6 @@ void CoverFetcherPlugin::manageProvider(bool enabled, QCheckBox *checkBox)
 				delete cap;
 				break;
 			}
-		}
-	}
-}
-
-void CoverFetcherPlugin::addCover(const QString &album, const QPixmap &cover)
-{
-	qDebug() << Q_FUNC_INFO << album;
-	for (QGroupBox *gb : _fetchDialog->findChildren<QGroupBox*>("albumCoverGroupBox")) {
-
-		qDebug() << Q_FUNC_INFO << gb->layout()->sizeConstraint();
-		if (gb->title() == album) {
-			QListWidget *list = gb->findChild<QListWidget*>("remoteCovers");
-			QListWidgetItem *item = new QListWidgetItem(list);
-			item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-			item->setCheckState(Qt::Unchecked);
-			item->setIcon(QIcon(cover));
-			/*if (cover.save(tmpCoverPath)) {
-				// Kind of ugly way to pass data from one class to another, but it does the job (at least an enum was created)
-				item->setData(FetchDialog::LW_TmpCoverPath, tmpCoverPath);
-			}*/
-			break;
 		}
 	}
 }
