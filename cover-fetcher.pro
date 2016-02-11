@@ -24,14 +24,14 @@ unix {
 }
 unix:!macx {
     MiamPlayerBuildDirectory = /home/mbach/Miam-Player-release
-    target.path = $$MiamPlayerBuildDirectory/MiamPlayer/plugins
-    LIBS += -L$$MiamPlayerBuildDirectory/MiamCore -lmiam-core
+    target.path = $$MiamPlayerBuildDirectory/Player/plugins
+    LIBS += -L$$MiamPlayerBuildDirectory/Core -lmiam-core
 }
 macx {
     QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.9
     MiamPlayerBuildDirectory = /Users/mbach/dev/Miam-Player-build/src
-    target.path = $$MiamPlayerBuildDirectory/MiamPlayer/MiamPlayer.app/Contents/PlugIns
-    LIBS += -L$$MiamPlayerBuildDirectory/MiamCore -lmiam-core
+    target.path = $$MiamPlayerBuildDirectory/Player/MiamPlayer.app/Contents/PlugIns
+    LIBS += -L$$MiamPlayerBuildDirectory/Core -lmiam-core
 }
 
 UI_DIR = $$PWD
