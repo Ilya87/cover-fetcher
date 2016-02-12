@@ -5,53 +5,64 @@
     <name>ConfigForm</name>
     <message>
         <source>About downloaded covers</source>
-        <translation type="unfinished"></translation>
+        <translation>О загруженных обложках</translation>
     </message>
     <message>
         <source>When it is possible, should I try to incorporate the cover inside the file?</source>
-        <translation type="unfinished"></translation>
+        <translation>Пробовать прикреплять обложку к файлу, когда это возможно?</translation>
     </message>
     <message>
         <source>Yes</source>
-        <translation type="unfinished"></translation>
+        <translation>Да</translation>
     </message>
     <message>
         <source>No</source>
-        <translation type="unfinished"></translation>
+        <translation>Нет</translation>
     </message>
     <message>
         <source>Remote Cover Art locations</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалённые места иллюстраций обложек</translation>
     </message>
     <message>
-        <source>This plugin is under development, therefore only MusicBrainz Repository is implemented.</source>
-        <translation type="unfinished"></translation>
+        <source>This plugin is under development, therefore Discogs and Last.FM are not yet implemented.</source>
+        <translation>Этот плагин находится в стадии разработки, поэтому Discogs и Last.FM ещё не внедрены.</translation>
     </message>
 </context>
 <context>
-    <name>CoverFetcher</name>
+    <name>CoverFetcherPlugin</name>
     <message>
         <source>Fetch covers</source>
-        <translation type="unfinished"></translation>
+        <translation>Получить обложки</translation>
     </message>
 </context>
 <context>
     <name>FetchDialog</name>
     <message>
         <source>Fetch Covers</source>
-        <translation type="unfinished"></translation>
+        <translation>Получить обложки</translation>
     </message>
     <message>
         <source>Preview size:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>64px</source>
-        <translation type="unfinished"></translation>
+        <translation>Размер предпросмотра:</translation>
     </message>
     <message>
         <source>%1px</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 пикс</translation>
+    </message>
+    <message>
+        <source>100px</source>
+        <translation>100 пикс</translation>
+    </message>
+</context>
+<context>
+    <name>QCoreApplication</name>
+    <message>
+        <source>There are more than 300 files to add to the %1 (%2 to add).</source>
+        <translation>Есть больше 300 файлов для добавления в %1 (%2, чтобы добавить).</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to continue? This might take some time.</source>
+        <translation>Вы уверены, что хотите продолжить? Это может занять некоторое время.</translation>
     </message>
 </context>
 </TS>

@@ -2,6 +2,7 @@
     <qresource prefix="/">
         <file>translations/CoverFetcher_en.qm</file>
         <file>translations/CoverFetcher_fr.qm</file>
+        <file>translations/CoverFetcher_ru.qm</file>
         <file alias="loading">loading.gif</file>
         <file>amazon_logo.png</file>
         <file>discogs_logo.png</file>
